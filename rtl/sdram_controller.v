@@ -18,28 +18,44 @@
  *  This simple host interface expects you to know the timing and know
  *  how long to wait for init, write operations and read operations
  */
- 
+
 parameter ROW_WIDTH = 13;
 parameter COL_WIDTH = 9;
 parameter BANK_WIDTH = 2;
 
 parameter ADDR_WIDTH = ROW_WIDTH + COL_WIDTH + BANK_WIDTH;
  
-module dram_controller (
+parameter CLK_FREQUENCY = 133; // Mhz
+parameter REFRESH_COUNT = 8192;
+parameter REFRESH_TIME =  32;  // ms
+
+// STATES - HIGH LEVEL
+parameter IDLE = 2'b00;
+parameter INIT = 2'b01;
+parameter REF =  2'b10;
+
+// clk / refresh =  clk / sec 
+//                , sec / refbatch 
+//                , ref / refbatch
+
+parameter CYCLES_BETWEEN_REFRESH = ( ( CLK_FREQUENCY * 1000000 * REFRESH_TIME ) / 1000 ) / REFRESH_COUNT;
+ 
+module sdram_controller (
     /* HOST INTERFACE */
-    input  [23:0] haddr,
+    input  [ADDR_WIDTH-1:0] haddr,
     input  [15:0] data_input,
     output [15:0] data_output,
+    output busy,
     input  rd_enable,
     input  wr_enable,
     input  rst_n,
     input  clk,
 
     /* SDRAM SIDE */
-    output [12:0] row_addr,   // 13 
-    output [8:0]  col_addr,   // +9 = 22-bit address = 4mbit
-    output [1:0]  bank_addr,  // 4 banks
-    inout  [15:0] data,
+    output [ROW_WIDTH-1:0]   row_addr,   // 13 
+    output [COL_WIDTH-1:0]   col_addr,   // +9 = 22-bit address = 4mbit
+    output [BANK_WIDTH-1:0]  bank_addr,  // 4 banks
+    inout  [15:0]            data,
     output        clock_enable,
     output        cs_n,
     output        ras_n,

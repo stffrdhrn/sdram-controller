@@ -28,4 +28,4 @@ DATE = "20:57:05  April 05, 2015"
 
 # Revisions
 
-PROJECT_REVISION = "dram_controller"
+PROJECT_REVISION = "sdram_controller"
