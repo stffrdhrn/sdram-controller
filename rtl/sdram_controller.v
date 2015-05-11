@@ -62,10 +62,24 @@ parameter REFRESH_TIME =  32;  // ms
 //                , ref / refbatch
 localparam CYCLES_BETWEEN_REFRESH = ( ( CLK_FREQUENCY * 1000000 * REFRESH_TIME ) / 1000 ) / REFRESH_COUNT;
 
-// STATES - HIGH LEVEL
+// STATES - TOP LEVEL
 localparam IDLE = 2'b00;
 localparam INIT = 2'b01;
 localparam REF =  2'b10;
+
+// STATES - SUB LEVEL
+localparam IDLE_IDLE = 3'b000;
+
+localparam INIT_NOP1 = 3'b000;
+localparam INIT_PRE1 = 3'b001;
+localparam INIT_REF1 = 3'b010;
+localparam INIT_NOP2 = 3'b011;
+localparam INIT_REF2 = 3'b100;
+localparam INIT_NOP3 = 3'b101;
+localparam INIT_LOAD = 3'b110;
+localparam INIT_NOP4 = 3'b111;
+
+localparam REF_REF =  3'b000;
  
 // Commands             CCRCWBBA
 //                      ESSSE100
@@ -98,7 +112,20 @@ output                     data_mask_low;
 output                     data_mask_high;
 
 /* Internal Wiring */
+reg [8:0] counter;
+reg [8:0] refresh_counter;
+
 reg [7:0] command;
+reg [8:0] wait_count;
+reg [1:0] top_state;
+reg [2:0] sub_state;
+
+reg [7:0] next_command;
+reg [8:0] next_wait;
+reg [1:0] next_top;
+reg [2:0] next_sub;
+
+
 
 assign clock_enable = command[7];
 assign cs_n         = command[6];
@@ -109,10 +136,136 @@ assign bank_addr[1] = command[2];
 assign bank_addr[0] = command[1];
 assign addr[10]     = command[0];
 
+// Handle 
+//   state counter 
+//   state changes
+//   and command output
 always @ (posedge clk)
   if (~rst_n)
+    begin
+    top_state <= INIT;
+    sub_state <= INIT_NOP1;
     command <= CMD_NOP;
+    wait_count <= 100;
+    counter <= 0;
+    end
   else 
-    command <= command;
+    begin
+    top_state <= next_top;
+    sub_state <= next_sub;
+    command <= next_command;
+    if (next_wait == 0)
+      begin
+      counter <= counter + 1; // todo reset
+      wait_count <= wait_count;
+      end
+    else
+      begin
+      counter <= 0;
+      wait_count <= next_wait;
+      end
+    end
+
+// Handle refresh counter
+always @ (posedge clk) 
+ if (~rst_n) 
+   refresh_counter <= 0;
+ else
+   if (top_state == REF)
+     refresh_counter <= 0;
+   else 
+     refresh_counter <= refresh_counter + 1;
+
+// Next state logic
+always @* 
+begin
+   case (top_state)
+      IDLE:
+        // Monitor for refresh
+        if (refresh_counter >= CYCLES_BETWEEN_REFRESH) 
+          next_top <= REF;
+        else 
+          next_top <= top_state;
+      
+      INIT:
+        // Init SDRAM 
+        if (counter == wait_count)
+        case (sub_state)
+          INIT_NOP1:
+            begin
+            next_top <= INIT;
+            next_sub <= INIT_PRE1;
+            next_wait <= 2;
+            next_command <= CMD_PALL;
+            end
+          INIT_PRE1:
+            begin
+            next_top <= INIT;
+            next_sub <= INIT_REF1;
+            next_wait <= 1;
+            next_command <= CMD_REF;
+            end
+          INIT_REF1:
+            begin
+            next_top <= INIT;
+            next_sub <= INIT_NOP2;
+            next_wait <= 8;
+            next_command <= CMD_NOP;
+            end
+          INIT_NOP2:
+            begin
+            next_top <= INIT;
+            next_sub <= INIT_REF2;
+            next_wait <= 1;
+            next_command <= CMD_REF;
+            end
+          INIT_REF2:
+            begin
+            next_top <= INIT;
+            next_sub <= INIT_NOP3;
+            next_wait <= 8;
+            next_command <= CMD_NOP;
+            end
+          INIT_NOP3:
+            begin
+            next_top <= INIT;
+            next_sub <= INIT_LOAD;
+            next_wait <= 1;
+            next_command <= CMD_MRS;            
+            end
+          INIT_LOAD:
+            begin
+            next_top <= INIT;
+            next_sub <= INIT_NOP4;
+            next_wait <= 2;
+            next_command <= CMD_NOP;  
+            end
+          INIT_NOP4:
+            begin
+            next_top <= IDLE;
+            next_sub <= IDLE_IDLE;
+            next_wait <= 0;
+            next_command <= CMD_NOP;
+            end
+          endcase
+         else 
+            begin
+            // HOLD
+            next_top <= top_state;
+            next_sub <= sub_state;
+            next_wait <= wait_count;
+            next_command <= command;
+            end
+      default:
+        begin
+        next_top <= top_state;
+        next_sub <= sub_state;
+        next_wait <= wait_count;
+        next_command <= command;
+        end
+   endcase
+     
+
+end
 
 endmodule
