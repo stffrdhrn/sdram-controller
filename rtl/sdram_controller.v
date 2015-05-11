@@ -50,8 +50,8 @@ parameter ROW_WIDTH = 13;
 parameter COL_WIDTH = 9;
 parameter BANK_WIDTH = 2;
 
-parameter SDRADDR_WIDTH = ROW_WIDTH > COL_WIDTH ? ROW_WIDTH : COL_WIDTH;
-parameter HADDR_WIDTH = ROW_WIDTH + COL_WIDTH + BANK_WIDTH;
+localparam SDRADDR_WIDTH = ROW_WIDTH > COL_WIDTH ? ROW_WIDTH : COL_WIDTH;
+localparam HADDR_WIDTH = ROW_WIDTH + COL_WIDTH + BANK_WIDTH;
  
 parameter CLK_FREQUENCY = 133; // Mhz
 parameter REFRESH_COUNT = 8192;
@@ -60,19 +60,19 @@ parameter REFRESH_TIME =  32;  // ms
 // clk / refresh =  clk / sec 
 //                , sec / refbatch 
 //                , ref / refbatch
-parameter CYCLES_BETWEEN_REFRESH = ( ( CLK_FREQUENCY * 1000000 * REFRESH_TIME ) / 1000 ) / REFRESH_COUNT;
+localparam CYCLES_BETWEEN_REFRESH = ( ( CLK_FREQUENCY * 1000000 * REFRESH_TIME ) / 1000 ) / REFRESH_COUNT;
 
 // STATES - HIGH LEVEL
-parameter IDLE = 2'b00;
-parameter INIT = 2'b01;
-parameter REF =  2'b10;
+localparam IDLE = 2'b00;
+localparam INIT = 2'b01;
+localparam REF =  2'b10;
  
 // Commands             CCRCWBBA
 //                      ESSSE100
-parameter CMD_PALL = 8'b10010001;
-parameter CMD_REF  = 8'b10001000;
-parameter CMD_NOP  = 8'b10111000;
-parameter CMD_MRS  = 8'b10000000;
+localparam CMD_PALL = 8'b10010001;
+localparam CMD_REF  = 8'b10001000;
+localparam CMD_NOP  = 8'b10111000;
+localparam CMD_MRS  = 8'b10000000;
 
 /* Interface Definition */
 /* HOST INTERFACE */
