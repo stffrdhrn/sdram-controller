@@ -158,7 +158,7 @@ always @ (posedge clk)
     data_input_r <= 16'b0;
     data_output_r <= 16'b0;
     busy_r <= 1'b0;
-    {data_mask_low_r, data_mask_high_r} <= 2'b11;
+    {data_mask_low_r, data_mask_high_r} <= 2'b00;
     end
   else 
     begin
