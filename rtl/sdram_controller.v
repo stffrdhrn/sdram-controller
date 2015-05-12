@@ -45,9 +45,12 @@ parameter REFRESH_COUNT = 8192; // cycles (how many refreshes required per refre
 localparam CYCLES_BETWEEN_REFRESH = ( CLK_FREQUENCY * 1_000 * REFRESH_TIME ) / REFRESH_COUNT;
 
 // STATES - TOP LEVEL
-localparam IDLE = 2'b00,
-           INIT = 2'b01,
-           REF =  2'b10;
+localparam IDLE    = 3'b000,
+           INIT    = 3'b001,
+           REFRESH = 3'b010,
+           READ    = 3'b011,
+           WRITE   = 3'b100;
+           
 
 // STATES - SUB LEVEL
 localparam IDLE_IDLE = 3'b000;
@@ -66,12 +69,15 @@ localparam REF_PRE  =  3'b000,
            REF_REF  =  3'b010,
            REF_NOP2 =  3'b100;
  
-// Commands             CCRCWBBA
-//                      ESSSE100
+// Commands              CCRCWBBA
+//                       ESSSE100
 localparam CMD_PALL = 8'b10010001,
            CMD_REF  = 8'b10001000,
            CMD_NOP  = 8'b10111000,
-           CMD_MRS  = 8'b10000000;
+           CMD_MRS  = 8'b10000000,
+           CMD_BACT = 8'b10011zzz,
+           CMD_READ = 8'b10101zz1,
+           CMD_WRIT = 8'b10100zz1;
 
 /* Interface Definition */
 /* HOST INTERFACE */
@@ -96,19 +102,25 @@ output                     we_n;
 output                     data_mask_low;
 output                     data_mask_high;
 
+/* I/O Registers */
+
+reg  [HADDR_WIDTH-1:0]   haddr_r;
+reg  [15:0]              data_input_r;
+reg  [15:0]              data_output_r;
+
 /* Internal Wiring */
 reg [3:0] state_counter;
 reg [9:0] refresh_counter;
 
 reg [7:0] command;
-reg [1:0] top_state;
+reg [2:0] top_state;
 reg [2:0] sub_state;
 
 // TODO output addr[6:4] when programming mode register
 
 reg [7:0] next_command;
 reg [3:0] next_wait;
-reg [1:0] next_top;
+reg [2:0] next_top;
 reg [2:0] next_sub;
 
 assign clock_enable = command[7];
@@ -130,12 +142,27 @@ always @ (posedge clk)
     sub_state <= INIT_NOP1;
     command <= CMD_NOP;
     state_counter <= 4'hf;
+    haddr_r <= {HADDR_WIDTH{1'b0}};
+    data_input_r <= 16'b0;
+    data_output_r <= 16'b0;
     end
   else 
     begin
     top_state <= next_top;
     sub_state <= next_sub;
     command <= next_command;
+    
+    data_output_r <= data_output_r;
+    
+    if (wr_enable)
+      data_input_r <= data_input;
+    else 
+      data_input_r <= data_input_r;
+    
+    if (rd_enable | wr_enable)
+      haddr_r <= haddr;
+    else 
+      haddr_r <= haddr_r;
     
     if (~state_counter)
       begin
@@ -152,7 +179,7 @@ always @ (posedge clk)
  if (~rst_n) 
    refresh_counter <= 10'b0;
  else
-   if (top_state == REF)
+   if (top_state == REFRESH)
      refresh_counter <= 10'b0;
    else 
      refresh_counter <= refresh_counter + 1'b1;
@@ -165,10 +192,24 @@ begin
         // Monitor for refresh or hold
         if (refresh_counter >= CYCLES_BETWEEN_REFRESH)
           begin
-          next_top <= REF;
+          next_top <= REFRESH;
           next_sub <= REF_PRE;
           next_wait <= 4'd1;
           next_command <= CMD_PALL;
+          end
+        else if (rd_enable)
+          begin
+          next_top <= READ;
+          next_sub <= IDLE_IDLE;
+          next_wait <= 4'd1;
+          next_command <= CMD_BACT;
+          end
+        else if (wr_enable)
+          begin
+          next_top <= WRITE;
+          next_sub <= IDLE_IDLE;
+          next_wait <= 4'd1;
+          next_command <= CMD_BACT;
           end
         else 
           begin
@@ -247,26 +288,26 @@ begin
             next_wait <= 4'd0;
             next_command <= command;
             end
-      REF:
+      REFRESH:
         if (~state_counter)
         case(sub_state)
           REF_PRE:
             begin
-            next_top <= REF;
+            next_top <= REFRESH;
             next_sub <= REF_NOP1;
             next_wait <= 4'd1;
             next_command <= CMD_NOP;
             end
           REF_NOP1:
             begin
-            next_top <= REF;
+            next_top <= REFRESH;
             next_sub <= REF_REF;
             next_wait <= 4'd1;
             next_command <= CMD_REF;
             end
           REF_REF:
             begin
-            next_top <= REF;
+            next_top <= REFRESH;
             next_sub <= REF_NOP2;
             next_wait <= 4'd8;
             next_command <= CMD_NOP;
@@ -287,6 +328,20 @@ begin
           next_wait <= 4'd0;
           next_command <= command;
           end
+      WRITE:
+         begin
+         next_top <= IDLE;
+         next_sub <= IDLE_IDLE;
+         next_wait <= 4'd0;
+         next_command <= CMD_NOP;
+         end  
+      READ:
+         begin
+         next_top <= IDLE;
+         next_sub <= IDLE_IDLE;
+         next_wait <= 4'd0;
+         next_command <= CMD_NOP;
+         end  
       default:
         begin
         next_top <= top_state;
