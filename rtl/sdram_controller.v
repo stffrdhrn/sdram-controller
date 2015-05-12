@@ -107,6 +107,13 @@ output                     data_mask_high;
 reg  [HADDR_WIDTH-1:0]   haddr_r;
 reg  [15:0]              data_input_r;
 reg  [15:0]              data_output_r;
+reg                      busy_r;
+
+wire [15:0]              data_output;
+wire                     busy;
+
+assign data_output = data_output_r;
+assign busy        = busy_r;
 
 /* Internal Wiring */
 reg [3:0] state_counter;
@@ -145,6 +152,7 @@ always @ (posedge clk)
     haddr_r <= {HADDR_WIDTH{1'b0}};
     data_input_r <= 16'b0;
     data_output_r <= 16'b0;
+    busy_r <= 1'b0;
     end
   else 
     begin
@@ -159,6 +167,11 @@ always @ (posedge clk)
     else 
       data_input_r <= data_input_r;
     
+    if (top_state == READ | top_state == WRITE) 
+      busy_r <= 1'b1;
+    else
+      busy_r <= 1'b0;
+      
     if (rd_enable | wr_enable)
       haddr_r <= haddr;
     else 
