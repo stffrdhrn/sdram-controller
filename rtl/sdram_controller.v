@@ -61,7 +61,10 @@ localparam INIT_NOP1 = 3'b000,
            INIT_LOAD = 3'b110,
            INIT_NOP4 = 3'b111;
 
-localparam REF_REF =  3'b000;
+localparam REF_PRE  =  3'b000,
+           REF_NOP1 =  3'b001,
+           REF_REF  =  3'b010,
+           REF_NOP2 =  3'b100;
  
 // Commands             CCRCWBBA
 //                      ESSSE100
@@ -101,12 +104,12 @@ reg [7:0] command;
 reg [1:0] top_state;
 reg [2:0] sub_state;
 
+// TODO output addr[6:4] when programming mode register
+
 reg [7:0] next_command;
 reg [3:0] next_wait;
 reg [1:0] next_top;
 reg [2:0] next_sub;
-
-
 
 assign clock_enable = command[7];
 assign cs_n         = command[6];
@@ -133,6 +136,7 @@ always @ (posedge clk)
     top_state <= next_top;
     sub_state <= next_sub;
     command <= next_command;
+    
     if (~state_counter)
       begin
       state_counter <= next_wait;
@@ -158,18 +162,22 @@ always @*
 begin
    case (top_state)
       IDLE:
-        // Monitor for refresh
-        begin
+        // Monitor for refresh or hold
         if (refresh_counter >= CYCLES_BETWEEN_REFRESH)
+          begin
           next_top <= REF;
+          next_sub <= REF_PRE;
+          next_wait <= 4'd1;
+          next_command <= CMD_PALL;
+          end
         else 
+          begin
           next_top <= top_state;
+          next_sub <= sub_state;
+          next_wait <= 4'd0;  
+          next_command <= CMD_NOP;
+          end
         
-        next_sub <= IDLE_IDLE;
-        next_wait <= 4'd0;
-        next_command <= CMD_NOP; 
-        end
-      
       INIT:
         // Init SDRAM 
         if (~state_counter)
@@ -239,6 +247,46 @@ begin
             next_wait <= 4'd0;
             next_command <= command;
             end
+      REF:
+        if (~state_counter)
+        case(sub_state)
+          REF_PRE:
+            begin
+            next_top <= REF;
+            next_sub <= REF_NOP1;
+            next_wait <= 4'd1;
+            next_command <= CMD_NOP;
+            end
+          REF_NOP1:
+            begin
+            next_top <= REF;
+            next_sub <= REF_REF;
+            next_wait <= 4'd1;
+            next_command <= CMD_REF;
+            end
+          REF_REF:
+            begin
+            next_top <= REF;
+            next_sub <= REF_NOP2;
+            next_wait <= 4'd8;
+            next_command <= CMD_NOP;
+            end
+          default:
+            begin
+            next_top <= IDLE;
+            next_sub <= IDLE_IDLE;
+            next_wait <= 4'd0;
+            next_command <= CMD_NOP;
+            end  
+        endcase 
+               
+        else
+          begin
+          next_top <= top_state;
+          next_sub <= sub_state;
+          next_wait <= 4'd0;
+          next_command <= command;
+          end
       default:
         begin
         next_top <= top_state;
