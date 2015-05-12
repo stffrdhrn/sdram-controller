@@ -19,30 +19,12 @@
  *  how long to wait for init, write operations and read operations
  */
 
-
- 
 module sdram_controller (
     /* HOST INTERFACE */
-    haddr,
-    data_input,
-    data_output,
-    busy,
-    rd_enable,
-    wr_enable,
-    rst_n,
-    clk,
+    haddr, data_input, data_output, busy, rd_enable, wr_enable, rst_n, clk,
 
     /* SDRAM SIDE */
-    addr,   // 13 
-    bank_addr,  // 4 banks
-    data,
-    clock_enable,
-    cs_n,
-    ras_n,
-    cas_n,
-    we_n,
-    data_mask_low, // DQML
-    data_mask_high // DQMH
+    addr, bank_addr, data, clock_enable, cs_n, ras_n, cas_n, we_n, data_mask_low, data_mask_high
 );
 
 /* Internal Parameters */
@@ -53,40 +35,40 @@ parameter BANK_WIDTH = 2;
 localparam SDRADDR_WIDTH = ROW_WIDTH > COL_WIDTH ? ROW_WIDTH : COL_WIDTH;
 localparam HADDR_WIDTH = ROW_WIDTH + COL_WIDTH + BANK_WIDTH;
  
-parameter CLK_FREQUENCY = 133; // Mhz
-parameter REFRESH_COUNT = 8192;
-parameter REFRESH_TIME =  32;  // ms
+parameter CLK_FREQUENCY = 133;  // Mhz     
+parameter REFRESH_TIME =  32;   // ms     (how often we need to refresh) 
+parameter REFRESH_COUNT = 8192; // cycles (how many refreshes required per refresh time)
 
 // clk / refresh =  clk / sec 
 //                , sec / refbatch 
 //                , ref / refbatch
-localparam CYCLES_BETWEEN_REFRESH = ( ( CLK_FREQUENCY * 1000000 * REFRESH_TIME ) / 1000 ) / REFRESH_COUNT;
+localparam CYCLES_BETWEEN_REFRESH = ( CLK_FREQUENCY * 1_000 * REFRESH_TIME ) / REFRESH_COUNT;
 
 // STATES - TOP LEVEL
-localparam IDLE = 2'b00;
-localparam INIT = 2'b01;
-localparam REF =  2'b10;
+localparam IDLE = 2'b00,
+           INIT = 2'b01,
+           REF =  2'b10;
 
 // STATES - SUB LEVEL
 localparam IDLE_IDLE = 3'b000;
 
-localparam INIT_NOP1 = 3'b000;
-localparam INIT_PRE1 = 3'b001;
-localparam INIT_REF1 = 3'b010;
-localparam INIT_NOP2 = 3'b011;
-localparam INIT_REF2 = 3'b100;
-localparam INIT_NOP3 = 3'b101;
-localparam INIT_LOAD = 3'b110;
-localparam INIT_NOP4 = 3'b111;
+localparam INIT_NOP1 = 3'b000,
+           INIT_PRE1 = 3'b001,
+           INIT_REF1 = 3'b010,
+           INIT_NOP2 = 3'b011,
+           INIT_REF2 = 3'b100,
+           INIT_NOP3 = 3'b101,
+           INIT_LOAD = 3'b110,
+           INIT_NOP4 = 3'b111;
 
 localparam REF_REF =  3'b000;
  
 // Commands             CCRCWBBA
 //                      ESSSE100
-localparam CMD_PALL = 8'b10010001;
-localparam CMD_REF  = 8'b10001000;
-localparam CMD_NOP  = 8'b10111000;
-localparam CMD_MRS  = 8'b10000000;
+localparam CMD_PALL = 8'b10010001,
+           CMD_REF  = 8'b10001000,
+           CMD_NOP  = 8'b10111000,
+           CMD_MRS  = 8'b10000000;
 
 /* Interface Definition */
 /* HOST INTERFACE */
@@ -112,16 +94,15 @@ output                     data_mask_low;
 output                     data_mask_high;
 
 /* Internal Wiring */
-reg [8:0] counter;
+reg [3:0] state_counter;
 reg [8:0] refresh_counter;
 
 reg [7:0] command;
-reg [8:0] wait_count;
 reg [1:0] top_state;
 reg [2:0] sub_state;
 
 reg [7:0] next_command;
-reg [8:0] next_wait;
+reg [3:0] next_wait;
 reg [1:0] next_top;
 reg [2:0] next_sub;
 
@@ -132,8 +113,7 @@ assign cs_n         = command[6];
 assign ras_n        = command[5];
 assign cas_n        = command[4];
 assign we_n         = command[3];
-assign bank_addr[1] = command[2];
-assign bank_addr[0] = command[1];
+assign bank_addr[1:0] = command[2:1];
 assign addr[10]     = command[0];
 
 // Handle 
@@ -146,35 +126,32 @@ always @ (posedge clk)
     top_state <= INIT;
     sub_state <= INIT_NOP1;
     command <= CMD_NOP;
-    wait_count <= 100;
-    counter <= 0;
+    state_counter <= 4'hf;
     end
   else 
     begin
     top_state <= next_top;
     sub_state <= next_sub;
     command <= next_command;
-    if (next_wait == 0)
+    if (~state_counter)
       begin
-      counter <= counter + 1; // todo reset
-      wait_count <= wait_count;
+      state_counter <= next_wait;
       end
     else
       begin
-      counter <= 0;
-      wait_count <= next_wait;
+      state_counter <= state_counter - 1'b1;
       end
     end
 
 // Handle refresh counter
 always @ (posedge clk) 
  if (~rst_n) 
-   refresh_counter <= 0;
+   refresh_counter <= 9'b0;
  else
    if (top_state == REF)
-     refresh_counter <= 0;
+     refresh_counter <= 9'b0;
    else 
-     refresh_counter <= refresh_counter + 1;
+     refresh_counter <= refresh_counter + 1'b1;
 
 // Next state logic
 always @* 
@@ -182,69 +159,75 @@ begin
    case (top_state)
       IDLE:
         // Monitor for refresh
-        if (refresh_counter >= CYCLES_BETWEEN_REFRESH) 
+        begin
+        if (refresh_counter >= CYCLES_BETWEEN_REFRESH)
           next_top <= REF;
         else 
           next_top <= top_state;
+        
+        next_sub <= IDLE_IDLE;
+        next_wait <= 4'd0;
+        next_command <= CMD_NOP; 
+        end
       
       INIT:
         // Init SDRAM 
-        if (counter == wait_count)
+        if (~state_counter)
         case (sub_state)
           INIT_NOP1:
             begin
             next_top <= INIT;
             next_sub <= INIT_PRE1;
-            next_wait <= 2;
+            next_wait <= 4'd2;
             next_command <= CMD_PALL;
             end
           INIT_PRE1:
             begin
             next_top <= INIT;
             next_sub <= INIT_REF1;
-            next_wait <= 1;
+            next_wait <= 4'd1;
             next_command <= CMD_REF;
             end
           INIT_REF1:
             begin
             next_top <= INIT;
             next_sub <= INIT_NOP2;
-            next_wait <= 8;
+            next_wait <= 4'd8;
             next_command <= CMD_NOP;
             end
           INIT_NOP2:
             begin
             next_top <= INIT;
             next_sub <= INIT_REF2;
-            next_wait <= 1;
+            next_wait <= 4'd1;
             next_command <= CMD_REF;
             end
           INIT_REF2:
             begin
             next_top <= INIT;
             next_sub <= INIT_NOP3;
-            next_wait <= 8;
+            next_wait <= 4'd8;
             next_command <= CMD_NOP;
             end
           INIT_NOP3:
             begin
             next_top <= INIT;
             next_sub <= INIT_LOAD;
-            next_wait <= 1;
+            next_wait <= 4'd1;
             next_command <= CMD_MRS;            
             end
           INIT_LOAD:
             begin
             next_top <= INIT;
             next_sub <= INIT_NOP4;
-            next_wait <= 2;
+            next_wait <= 4'd2;
             next_command <= CMD_NOP;  
             end
           INIT_NOP4:
             begin
             next_top <= IDLE;
             next_sub <= IDLE_IDLE;
-            next_wait <= 0;
+            next_wait <= 4'd0;
             next_command <= CMD_NOP;
             end
           endcase
@@ -253,14 +236,14 @@ begin
             // HOLD
             next_top <= top_state;
             next_sub <= sub_state;
-            next_wait <= wait_count;
+            next_wait <= 4'd0;
             next_command <= command;
             end
       default:
         begin
         next_top <= top_state;
         next_sub <= sub_state;
-        next_wait <= wait_count;
+        next_wait <= 4'd0;
         next_command <= command;
         end
    endcase
