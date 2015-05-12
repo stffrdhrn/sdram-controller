@@ -108,10 +108,15 @@ reg  [HADDR_WIDTH-1:0]   haddr_r;
 reg  [15:0]              data_input_r;
 reg  [15:0]              data_output_r;
 reg                      busy_r;
+reg                      data_mask_low_r;
+reg                      data_mask_high_r;
 
 wire [15:0]              data_output;
 wire                     busy;
+wire                     data_mask_low, data_mask_high;
 
+assign data_mask_high = data_mask_high_r;
+assign data_mask_low = data_mask_low_r;
 assign data_output = data_output_r;
 assign busy        = busy_r;
 
@@ -153,12 +158,14 @@ always @ (posedge clk)
     data_input_r <= 16'b0;
     data_output_r <= 16'b0;
     busy_r <= 1'b0;
+    {data_mask_low_r, data_mask_high_r} <= 2'b11;
     end
   else 
     begin
     top_state <= next_top;
     sub_state <= next_sub;
     command <= next_command;
+    {data_mask_low_r, data_mask_high_r} <= {data_mask_low_r, data_mask_high_r};
     
     data_output_r <= data_output_r;
     
