@@ -98,7 +98,7 @@ output                     data_mask_high;
 
 /* Internal Wiring */
 reg [3:0] state_counter;
-reg [8:0] refresh_counter;
+reg [9:0] refresh_counter;
 
 reg [7:0] command;
 reg [1:0] top_state;
@@ -150,10 +150,10 @@ always @ (posedge clk)
 // Handle refresh counter
 always @ (posedge clk) 
  if (~rst_n) 
-   refresh_counter <= 9'b0;
+   refresh_counter <= 10'b0;
  else
    if (top_state == REF)
-     refresh_counter <= 9'b0;
+     refresh_counter <= 10'b0;
    else 
      refresh_counter <= refresh_counter + 1'b1;
 
