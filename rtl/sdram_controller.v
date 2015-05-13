@@ -110,6 +110,8 @@ reg  [15:0]              data_output_r;
 reg                      busy_r;
 reg                      data_mask_low_r;
 reg                      data_mask_high_r;
+reg [SDRADDR_WIDTH-1:0]  addr_r;
+reg [BANK_WIDTH-1:0]     bank_addr_r;
 
 wire [15:0]              data_output;
 wire                     busy;
@@ -135,13 +137,9 @@ reg [3:0] next_wait;
 reg [2:0] next_top;
 reg [2:0] next_sub;
 
-assign clock_enable = command[7];
-assign cs_n         = command[6];
-assign ras_n        = command[5];
-assign cas_n        = command[4];
-assign we_n         = command[3];
-assign bank_addr[1:0] = command[2:1];
-assign addr[10]     = command[0];
+assign {clock_enable, cs_n, ras_n, cas_n, we_n} = command[7:3];
+assign bank_addr[1:0] = (top_state == READ | top_state == WRITE) ? bank_addr_r : command[2:1];
+assign addr           = (top_state == READ | top_state == WRITE) ? addr_r : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
 
 // Handle 
 //   state counter 
