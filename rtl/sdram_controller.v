@@ -132,10 +132,11 @@ reg [2:0] sub_state;
 
 // TODO output addr[6:4] when programming mode register
 
-reg [7:0] next_command;
-reg [3:0] next_wait;
-reg [2:0] next_top;
-reg [2:0] next_sub;
+reg [7:0]                next_command;
+reg [3:0]                next_wait;
+reg [2:0]                next_top;
+reg [2:0]                next_sub;
+reg [SDRADDR_WIDTH-1:0]  next_addr;
 
 assign {clock_enable, cs_n, ras_n, cas_n, we_n} = command[7:3];
 assign bank_addr[1:0] = (top_state == READ | top_state == WRITE) ? bank_addr_r : command[2:1];
@@ -157,6 +158,7 @@ always @ (posedge clk)
     data_output_r <= 16'b0;
     busy_r <= 1'b0;
     {data_mask_low_r, data_mask_high_r} <= 2'b00;
+    addr_r <= {SDRADDR_WIDTH{1'b0}};
     end
   else 
     begin
@@ -164,6 +166,7 @@ always @ (posedge clk)
     sub_state <= next_sub;
     command <= next_command;
     {data_mask_low_r, data_mask_high_r} <= {data_mask_low_r, data_mask_high_r};
+    addr_r <= next_addr;
     
     data_output_r <= data_output_r;
     
@@ -214,6 +217,7 @@ begin
           next_sub <= REF_PRE;
           next_wait <= 4'd1;
           next_command <= CMD_PALL;
+          next_addr <= {SDRADDR_WIDTH{1'b0}};
           end
         else if (rd_enable)
           begin
