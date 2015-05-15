@@ -137,6 +137,7 @@ reg [3:0]                next_wait;
 reg [2:0]                next_top;
 reg [2:0]                next_sub;
 reg [SDRADDR_WIDTH-1:0]  next_addr;
+reg [1:0]                next_bank_addr;
 
 assign {clock_enable, cs_n, ras_n, cas_n, we_n} = command[7:3];
 assign bank_addr[1:0] = (top_state == READ | top_state == WRITE) ? bank_addr_r : command[2:1];
@@ -159,6 +160,7 @@ always @ (posedge clk)
     busy_r <= 1'b0;
     {data_mask_low_r, data_mask_high_r} <= 2'b00;
     addr_r <= {SDRADDR_WIDTH{1'b0}};
+    bank_addr_r <= 2'b0;
     end
   else 
     begin
@@ -167,6 +169,7 @@ always @ (posedge clk)
     command <= next_command;
     {data_mask_low_r, data_mask_high_r} <= {data_mask_low_r, data_mask_high_r};
     addr_r <= next_addr;
+    bank_addr_r <= next_bank_addr;
     
     data_output_r <= data_output_r;
     
@@ -218,6 +221,7 @@ begin
           next_wait <= 4'd1;
           next_command <= CMD_PALL;
           next_addr <= {SDRADDR_WIDTH{1'b0}};
+          next_bank_addr <= 2'b0;
           end
         else if (rd_enable)
           begin
@@ -225,6 +229,8 @@ begin
           next_sub <= IDLE_IDLE;
           next_wait <= 4'd1;
           next_command <= CMD_BACT;
+          next_addr <= {SDRADDR_WIDTH{1'b0}};
+          next_bank_addr <= 2'b0;
           end
         else if (wr_enable)
           begin
@@ -232,6 +238,8 @@ begin
           next_sub <= IDLE_IDLE;
           next_wait <= 4'd1;
           next_command <= CMD_BACT;
+          next_addr <= {SDRADDR_WIDTH{1'b0}};
+          next_bank_addr <= 2'b0;
           end
         else 
           begin
@@ -239,6 +247,8 @@ begin
           next_sub <= sub_state;
           next_wait <= 4'd0;  
           next_command <= CMD_NOP;
+          next_addr <= {SDRADDR_WIDTH{1'b0}};
+          next_bank_addr <= 2'b0;
           end
         
       INIT:
@@ -251,6 +261,8 @@ begin
             next_sub <= INIT_PRE1;
             next_wait <= 4'd2;
             next_command <= CMD_PALL;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           INIT_PRE1:
             begin
@@ -258,6 +270,8 @@ begin
             next_sub <= INIT_REF1;
             next_wait <= 4'd1;
             next_command <= CMD_REF;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           INIT_REF1:
             begin
@@ -265,6 +279,8 @@ begin
             next_sub <= INIT_NOP2;
             next_wait <= 4'd8;
             next_command <= CMD_NOP;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           INIT_NOP2:
             begin
@@ -272,6 +288,8 @@ begin
             next_sub <= INIT_REF2;
             next_wait <= 4'd1;
             next_command <= CMD_REF;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           INIT_REF2:
             begin
@@ -279,20 +297,26 @@ begin
             next_sub <= INIT_NOP3;
             next_wait <= 4'd8;
             next_command <= CMD_NOP;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           INIT_NOP3:
             begin
             next_top <= INIT;
             next_sub <= INIT_LOAD;
             next_wait <= 4'd1;
-            next_command <= CMD_MRS;            
+            next_command <= CMD_MRS;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;         
             end
           INIT_LOAD:
             begin
             next_top <= INIT;
             next_sub <= INIT_NOP4;
             next_wait <= 4'd2;
-            next_command <= CMD_NOP;  
+            next_command <= CMD_NOP;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           INIT_NOP4:
             begin
@@ -300,6 +324,8 @@ begin
             next_sub <= IDLE_IDLE;
             next_wait <= 4'd0;
             next_command <= CMD_NOP;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           endcase
          else 
@@ -309,6 +335,8 @@ begin
             next_sub <= sub_state;
             next_wait <= 4'd0;
             next_command <= command;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
       REFRESH:
         if (~state_counter)
@@ -319,6 +347,8 @@ begin
             next_sub <= REF_NOP1;
             next_wait <= 4'd1;
             next_command <= CMD_NOP;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           REF_NOP1:
             begin
@@ -326,6 +356,8 @@ begin
             next_sub <= REF_REF;
             next_wait <= 4'd1;
             next_command <= CMD_REF;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           REF_REF:
             begin
@@ -333,6 +365,8 @@ begin
             next_sub <= REF_NOP2;
             next_wait <= 4'd8;
             next_command <= CMD_NOP;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end
           default:
             begin
@@ -340,6 +374,8 @@ begin
             next_sub <= IDLE_IDLE;
             next_wait <= 4'd0;
             next_command <= CMD_NOP;
+            next_addr <= {SDRADDR_WIDTH{1'b0}};
+            next_bank_addr <= 2'b0;
             end  
         endcase 
                
@@ -349,6 +385,8 @@ begin
           next_sub <= sub_state;
           next_wait <= 4'd0;
           next_command <= command;
+          next_addr <= {SDRADDR_WIDTH{1'b0}};
+          next_bank_addr <= 2'b0;
           end
       WRITE:
          begin
@@ -356,6 +394,8 @@ begin
          next_sub <= IDLE_IDLE;
          next_wait <= 4'd0;
          next_command <= CMD_NOP;
+         next_addr <= {SDRADDR_WIDTH{1'b0}};
+         next_bank_addr <= 2'b0;
          end  
       READ:
          begin
@@ -363,6 +403,8 @@ begin
          next_sub <= IDLE_IDLE;
          next_wait <= 4'd0;
          next_command <= CMD_NOP;
+         next_addr <= {SDRADDR_WIDTH{1'b0}};
+         next_bank_addr <= 2'b0;
          end  
       default:
         begin
@@ -370,6 +412,8 @@ begin
         next_sub <= sub_state;
         next_wait <= 4'd0;
         next_command <= command;
+        next_addr <= {SDRADDR_WIDTH{1'b0}};
+        next_bank_addr <= 2'b0;
         end
    endcase
      
