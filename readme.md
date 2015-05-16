@@ -1,6 +1,13 @@
-# _SDRAM Memory Conttoller_
+# _SDRAM Memory Controller_
 
 Work in progress. 
+
+Basic features
+ - on reset will go into INIT sequnce
+ - then IDLE
+ - REFRESH
+ - READ
+ - WRITE
 
 Theory is to get a simple controller to work on the De0 Nano
 
