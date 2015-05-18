@@ -6,9 +6,9 @@ Theory is to get a simple controller to work on the De0 Nano
 
 Basic features
  - Operates at 133Mhz, CAS 3, 32MB, 16-bit data
- - on reset will go into `INIT` sequnce
- - The controller sits in `IDLE` waiting for `REFRESH`, `READ` or `WRITE` 
- - `REFRESH` operations are spaced evenly every aprox 400 cycles
+ - On reset will go into `INIT` sequnce
+ - After `INIT` the controller sits in `IDLE` waiting for `REFRESH`, `READ` or `WRITE` 
+ - `REFRESH` operations are spaced evenly 8192 times every 32ms
  - `READ` is always single read with auto precharge
  - `WRITE` is always single write with auto precharge
 
@@ -32,20 +32,20 @@ Basic features
 
 ```
 
-From above most signals should be pretty much self explainatory. Ill list some important points here for now.  It will be expanded on later. 
- - `haddr` is equivelant to `{bank, row, column}`
- - `rd_enable` should be set to high once an address is presented on the `addr` bus and we which to read data. 
+From tje above diafram most signals should be pretty much self explainatory. Here are some important points for now.  It will be expanded on later. 
+ - `haddr` is equivelant to the concatenation of `{bank, row, column}`
+ - `rd_enable` should be set to high once an address is presented on the `addr` bus and we wish to read data. 
  - `wr_enable` should be set to high once `addr` and `data` is presented on the bus
  - `busy` will go high when the read or write command is acknowledged. `busy` will go low when the write or read operation is complete.  In the case of read data should be on the bus for the next posedge.
  - **NOTE** For single reads and writes `wr_enable` and `rd_enable` should be set low once `busy` is observed.  This will protect from the controller thinking another request is needed. 
 
 ## Project Status/TODO
  - [x] Compiles
- - [ ] simulated
- - [ ] confirmed in De0 Nano
+ - [ ] Simulated
+ - [ ] Confirmed in De0 Nano
 
 ## Project Setup
-This project has been developed with quartus II. 
+This project has been developed with altera quartus II. 
 
 ## License
 BSD
