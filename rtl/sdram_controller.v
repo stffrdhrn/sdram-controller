@@ -33,7 +33,7 @@ parameter COL_WIDTH = 9;
 parameter BANK_WIDTH = 2;
 
 localparam SDRADDR_WIDTH = ROW_WIDTH > COL_WIDTH ? ROW_WIDTH : COL_WIDTH;
-localparam HADDR_WIDTH = ROW_WIDTH + COL_WIDTH + BANK_WIDTH;
+localparam HADDR_WIDTH = BANK_WIDTH + ROW_WIDTH + COL_WIDTH;
  
 parameter CLK_FREQUENCY = 133;  // Mhz     
 parameter REFRESH_TIME =  32;   // ms     (how often we need to refresh) 
@@ -68,16 +68,27 @@ localparam REF_PRE  =  3'b000,
            REF_NOP1 =  3'b001,
            REF_REF  =  3'b010,
            REF_NOP2 =  3'b100;
- 
+
+localparam READ_ACT  = 3'b000,
+           READ_NOP1 = 3'b001,
+           READ_CAS  = 3'b010,
+           READ_NOP2 = 3'b011,
+           READ_READ = 3'b100;
+           
+localparam WRIT_ACT  = 3'b000,
+           WRIT_NOP1 = 3'b001,
+           WRIT_CAS  = 3'b010,
+           WRIT_NOP2 = 3'b011;
+          
 // Commands              CCRCWBBA
 //                       ESSSE100
 localparam CMD_PALL = 8'b10010001,
            CMD_REF  = 8'b10001000,
            CMD_NOP  = 8'b10111000,
-           CMD_MRS  = 8'b10000000,
-           CMD_BACT = 8'b10011zzz,
-           CMD_READ = 8'b10101zz1,
-           CMD_WRIT = 8'b10100zz1;
+           CMD_MRS  = 8'b1000000x,
+           CMD_BACT = 8'b10011xxx,
+           CMD_READ = 8'b10101xx1,
+           CMD_WRIT = 8'b10100xx1;
 
 /* Interface Definition */
 /* HOST INTERFACE */
@@ -136,12 +147,14 @@ reg [7:0]                next_command;
 reg [3:0]                next_wait;
 reg [2:0]                next_top;
 reg [2:0]                next_sub;
-reg [SDRADDR_WIDTH-1:0]  next_addr;
-reg [1:0]                next_bank_addr;
 
 assign {clock_enable, cs_n, ras_n, cas_n, we_n} = command[7:3];
 assign bank_addr[1:0] = (top_state == READ | top_state == WRITE) ? bank_addr_r : command[2:1];
-assign addr           = (top_state == READ | top_state == WRITE) ? addr_r : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
+assign addr           = (  top_state == READ 
+                         | top_state == WRITE 
+                         | ((top_state == INIT) & (sub_state == INIT_LOAD))
+                        ) ? addr_r 
+                        : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
 
 // Handle 
 //   state counter 
@@ -159,8 +172,6 @@ always @ (posedge clk)
     data_output_r <= 16'b0;
     busy_r <= 1'b0;
     {data_mask_low_r, data_mask_high_r} <= 2'b00;
-    addr_r <= {SDRADDR_WIDTH{1'b0}};
-    bank_addr_r <= 2'b0;
     end
   else 
     begin
@@ -168,8 +179,6 @@ always @ (posedge clk)
     sub_state <= next_sub;
     command <= next_command;
     {data_mask_low_r, data_mask_high_r} <= {data_mask_low_r, data_mask_high_r};
-    addr_r <= next_addr;
-    bank_addr_r <= next_bank_addr;
     
     data_output_r <= data_output_r;
     
@@ -220,35 +229,28 @@ begin
           next_sub <= REF_PRE;
           next_wait <= 4'd1;
           next_command <= CMD_PALL;
-          next_addr <= {SDRADDR_WIDTH{1'b0}};
-          next_bank_addr <= 2'b0;
           end
         else if (rd_enable)
           begin
           next_top <= READ;
-          next_sub <= IDLE_IDLE;
+          next_sub <= READ_ACT;
           next_wait <= 4'd1;
           next_command <= CMD_BACT;
-          next_addr <= {SDRADDR_WIDTH{1'b0}};
-          next_bank_addr <= 2'b0;
           end
         else if (wr_enable)
           begin
           next_top <= WRITE;
-          next_sub <= IDLE_IDLE;
+          next_sub <= WRIT_ACT;
           next_wait <= 4'd1;
           next_command <= CMD_BACT;
-          next_addr <= {SDRADDR_WIDTH{1'b0}};
-          next_bank_addr <= 2'b0;
           end
         else 
           begin
+          // HOLD
           next_top <= top_state;
           next_sub <= sub_state;
-          next_wait <= 4'd0;  
-          next_command <= CMD_NOP;
-          next_addr <= {SDRADDR_WIDTH{1'b0}};
-          next_bank_addr <= 2'b0;
+          next_wait <= 4'd0;
+          next_command <= command;
           end
         
       INIT:
@@ -261,8 +263,6 @@ begin
             next_sub <= INIT_PRE1;
             next_wait <= 4'd2;
             next_command <= CMD_PALL;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           INIT_PRE1:
             begin
@@ -270,8 +270,6 @@ begin
             next_sub <= INIT_REF1;
             next_wait <= 4'd1;
             next_command <= CMD_REF;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           INIT_REF1:
             begin
@@ -279,8 +277,6 @@ begin
             next_sub <= INIT_NOP2;
             next_wait <= 4'd8;
             next_command <= CMD_NOP;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           INIT_NOP2:
             begin
@@ -288,8 +284,6 @@ begin
             next_sub <= INIT_REF2;
             next_wait <= 4'd1;
             next_command <= CMD_REF;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           INIT_REF2:
             begin
@@ -297,17 +291,13 @@ begin
             next_sub <= INIT_NOP3;
             next_wait <= 4'd8;
             next_command <= CMD_NOP;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           INIT_NOP3:
             begin
             next_top <= INIT;
             next_sub <= INIT_LOAD;
             next_wait <= 4'd1;
-            next_command <= CMD_MRS;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;         
+            next_command <= CMD_MRS;        
             end
           INIT_LOAD:
             begin
@@ -315,8 +305,6 @@ begin
             next_sub <= INIT_NOP4;
             next_wait <= 4'd2;
             next_command <= CMD_NOP;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           INIT_NOP4:
             begin
@@ -324,8 +312,6 @@ begin
             next_sub <= IDLE_IDLE;
             next_wait <= 4'd0;
             next_command <= CMD_NOP;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           endcase
          else 
@@ -335,8 +321,6 @@ begin
             next_sub <= sub_state;
             next_wait <= 4'd0;
             next_command <= command;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
       REFRESH:
         if (~state_counter)
@@ -347,8 +331,6 @@ begin
             next_sub <= REF_NOP1;
             next_wait <= 4'd1;
             next_command <= CMD_NOP;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           REF_NOP1:
             begin
@@ -356,8 +338,6 @@ begin
             next_sub <= REF_REF;
             next_wait <= 4'd1;
             next_command <= CMD_REF;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           REF_REF:
             begin
@@ -365,8 +345,6 @@ begin
             next_sub <= REF_NOP2;
             next_wait <= 4'd8;
             next_command <= CMD_NOP;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end
           default:
             begin
@@ -374,50 +352,103 @@ begin
             next_sub <= IDLE_IDLE;
             next_wait <= 4'd0;
             next_command <= CMD_NOP;
-            next_addr <= {SDRADDR_WIDTH{1'b0}};
-            next_bank_addr <= 2'b0;
             end  
         endcase 
                
         else
           begin
+          // HOLD
           next_top <= top_state;
           next_sub <= sub_state;
           next_wait <= 4'd0;
           next_command <= command;
-          next_addr <= {SDRADDR_WIDTH{1'b0}};
-          next_bank_addr <= 2'b0;
           end
       WRITE:
-         begin
-         next_top <= IDLE;
-         next_sub <= IDLE_IDLE;
-         next_wait <= 4'd0;
-         next_command <= CMD_NOP;
-         next_addr <= {SDRADDR_WIDTH{1'b0}};
-         next_bank_addr <= 2'b0;
-         end  
+        if (~state_counter)
+        case(sub_state)
+          WRIT_ACT:
+            begin
+            next_top <= WRITE;
+            next_sub <= WRIT_NOP1;
+            next_wait <= 4'd2;
+            next_command <= CMD_NOP;
+            end
+          WRIT_NOP1:
+            begin
+            next_top <= WRITE;
+            next_sub <= WRIT_CAS;
+            next_wait <= 4'd1;
+            next_command <= CMD_WRIT;
+            end
+          WRIT_CAS:
+            begin
+            next_top <= WRITE;
+            next_sub <= WRIT_NOP2;
+            next_wait <= 4'd2;
+            next_command <= CMD_NOP;
+            end
+          default:
+            begin
+            next_top <= IDLE;
+            next_sub <= IDLE_IDLE;
+            next_wait <= 4'd0;
+            next_command <= CMD_NOP;
+            end  
+        endcase 
+               
+        else
+          begin
+          // HOLD
+          next_top <= top_state;
+          next_sub <= sub_state;
+          next_wait <= 4'd0;
+          next_command <= command;
+          end
       READ:
          begin
          next_top <= IDLE;
          next_sub <= IDLE_IDLE;
          next_wait <= 4'd0;
          next_command <= CMD_NOP;
-         next_addr <= {SDRADDR_WIDTH{1'b0}};
-         next_bank_addr <= 2'b0;
          end  
       default:
         begin
+        // HOLD
         next_top <= top_state;
         next_sub <= sub_state;
         next_wait <= 4'd0;
         next_command <= command;
-        next_addr <= {SDRADDR_WIDTH{1'b0}};
-        next_bank_addr <= 2'b0;
         end
    endcase
-     
-
 end
+
+always @ (posedge clk)
+  if (~rst_n)
+    begin
+     bank_addr_r <= 2'b0;
+     addr_r <= {SDRADDR_WIDTH{1'b0}};
+    end
+  else
+   if ((top_state == READ | top_state == WRITE) & sub_state == READ_ACT)
+     begin
+     bank_addr_r <= haddr_r[HADDR_WIDTH-1:HADDR_WIDTH-(BANK_WIDTH)];
+     addr_r <= haddr_r[HADDR_WIDTH-(BANK_WIDTH+1):HADDR_WIDTH-(BANK_WIDTH+ROW_WIDTH)];
+     end
+   else if ((top_state == INIT) & (sub_state == INIT_LOAD))
+     begin
+     bank_addr_r <= 2'b0;
+     // Program mode register during load cycle
+     //                                       B  C  SB
+     //                                       R  A  EUR
+     //                                       S  S-3Q ST
+     //                                       T  654L210
+     addr_r <= {{SDRADDR_WIDTH-10{1'b0}}, 10'b1000110000};
+     end
+   else 
+     begin 
+     bank_addr_r <= 2'b0;
+     addr_r <= {SDRADDR_WIDTH{1'b0}};
+     end
+   
 
 endmodule
