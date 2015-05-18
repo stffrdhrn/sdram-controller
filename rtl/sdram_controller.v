@@ -475,6 +475,13 @@ always @ (posedge clk)
      bank_addr_r <= haddr_r[HADDR_WIDTH-1:HADDR_WIDTH-(BANK_WIDTH)];
      addr_r <= haddr_r[HADDR_WIDTH-(BANK_WIDTH+1):HADDR_WIDTH-(BANK_WIDTH+ROW_WIDTH)];
      end
+   else if ((top_state == READ | top_state == WRITE) & sub_state == READ_CAS)
+     begin
+     // Send Column Address
+     // TODO send auto precharge command on A10
+     bank_addr_r <= 2'b0;
+     addr_r <= {{HADDR_WIDTH-(COL_WIDTH){1'b0}}, haddr_r[HADDR_WIDTH-(BANK_WIDTH+ROW_WIDTH+1):0]};
+     end     
    else if ((top_state == INIT) & (sub_state == INIT_LOAD))
      begin
      bank_addr_r <= 2'b0;
