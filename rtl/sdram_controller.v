@@ -405,12 +405,53 @@ begin
           next_command <= command;
           end
       READ:
-         begin
-         next_top <= IDLE;
-         next_sub <= IDLE_IDLE;
-         next_wait <= 4'd0;
-         next_command <= CMD_NOP;
-         end  
+        if (~state_counter)
+        case(sub_state)
+          READ_ACT:
+            begin
+            next_top <= READ;
+            next_sub <= READ_NOP1;
+            next_wait <= 4'd2;
+            next_command <= CMD_NOP;
+            end
+          READ_NOP1:
+            begin
+            next_top <= READ;
+            next_sub <= READ_CAS;
+            next_wait <= 4'd1;
+            next_command <= CMD_READ;
+            end
+          READ_CAS:
+            begin
+            next_top <= READ;
+            next_sub <= READ_NOP2;
+            next_wait <= 4'd2;
+            next_command <= CMD_NOP;
+            end
+          READ_NOP2:
+            begin
+            next_top <= READ;
+            next_sub <= READ_READ;
+            next_wait <= 4'd1;
+            next_command <= CMD_NOP;
+            end
+          default:
+            begin
+            next_top <= IDLE;
+            next_sub <= IDLE_IDLE;
+            next_wait <= 4'd0;
+            next_command <= CMD_NOP;
+            end  
+        endcase 
+               
+        else
+          begin
+          // HOLD
+          next_top <= top_state;
+          next_sub <= sub_state;
+          next_wait <= 4'd0;
+          next_command <= command;
+          end
       default:
         begin
         // HOLD
