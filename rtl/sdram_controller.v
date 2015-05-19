@@ -2,8 +2,8 @@
  * simple controller for ISSI IS42S16160G-7 SDRAM found in De0 Nano
  *  16Mbit x 16 data bit bus (32 megabytes)
  *  Default options
- *    100Mhz
- *    CAS 2
+ *    133Mhz
+ *    CAS 3
  *
  *  Very simple host interface
  *     * No burst support
@@ -15,8 +15,8 @@
  *     * wr_enable - write enable, on clk posedge haddr and data_input will be latched in, after *few clocks* data will be written to sdram
  *
  * Theory
- *  This simple host interface expects you to know the timing and know
- *  how long to wait for init, write operations and read operations
+ *  This simple host interface has a busy signal to tell you when you are not able
+ *  to issue commands. 
  */
 
 module sdram_controller (
@@ -32,8 +32,8 @@ parameter ROW_WIDTH = 13;
 parameter COL_WIDTH = 9;
 parameter BANK_WIDTH = 2;
 
-localparam SDRADDR_WIDTH = ROW_WIDTH > COL_WIDTH ? ROW_WIDTH : COL_WIDTH;
-localparam HADDR_WIDTH = BANK_WIDTH + ROW_WIDTH + COL_WIDTH;
+parameter SDRADDR_WIDTH = ROW_WIDTH > COL_WIDTH ? ROW_WIDTH : COL_WIDTH;
+parameter HADDR_WIDTH = BANK_WIDTH + ROW_WIDTH + COL_WIDTH;
  
 parameter CLK_FREQUENCY = 133;  // Mhz     
 parameter REFRESH_TIME =  32;   // ms     (how often we need to refresh) 
@@ -129,9 +129,9 @@ wire                     busy;
 wire                     data_mask_low, data_mask_high;
 
 assign data_mask_high = data_mask_high_r;
-assign data_mask_low = data_mask_low_r;
-assign data_output = data_output_r;
-assign busy        = busy_r;
+assign data_mask_low  = data_mask_low_r;
+assign data_output    = data_output_r;
+assign busy           = busy_r;
 
 /* Internal Wiring */
 reg [3:0] state_counter;
@@ -155,6 +155,8 @@ assign addr           = (  top_state == READ
                          | ((top_state == INIT) & (sub_state == INIT_LOAD))
                         ) ? addr_r 
                         : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
+                        
+assign data = (top_state == WRITE & sub_state == WRIT_CAS) ? data_input_r : 16'bz;
 
 // Handle 
 //   state counter 
@@ -171,21 +173,28 @@ always @ (posedge clk)
     data_input_r <= 16'b0;
     data_output_r <= 16'b0;
     busy_r <= 1'b0;
-    {data_mask_low_r, data_mask_high_r} <= 2'b00;
+    {data_mask_low_r, data_mask_high_r} <= 2'b11;
     end
   else 
     begin
     top_state <= next_top;
     sub_state <= next_sub;
     command <= next_command;
-    {data_mask_low_r, data_mask_high_r} <= {data_mask_low_r, data_mask_high_r};
     
-    data_output_r <= data_output_r;
+    if (top_state == READ | top_state == WRITE)
+      {data_mask_low_r, data_mask_high_r} <= 2'b00;
+    else 
+      {data_mask_low_r, data_mask_high_r} <= 2'b11;
     
     if (wr_enable)
       data_input_r <= data_input;
     else 
       data_input_r <= data_input_r;
+    
+    if (top_state == READ & sub_state == READ_READ)
+      data_output_r <= data;
+    else
+      data_output_r <= data_output_r;
     
     if (top_state == READ | top_state == WRITE) 
       busy_r <= 1'b1;
@@ -463,10 +472,11 @@ begin
    endcase
 end
 
+/* Handle logic for sending addresses and commands to SDRAM based on current state*/
 always @ (posedge clk)
   if (~rst_n)
     begin
-     bank_addr_r <= 2'b0;
+     bank_addr_r <= 2'b00;
      addr_r <= {SDRADDR_WIDTH{1'b0}};
     end
   else
@@ -478,13 +488,20 @@ always @ (posedge clk)
    else if ((top_state == READ | top_state == WRITE) & sub_state == READ_CAS)
      begin
      // Send Column Address
-     // TODO send auto precharge command on A10
-     bank_addr_r <= 2'b0;
-     addr_r <= {{HADDR_WIDTH-(COL_WIDTH){1'b0}}, haddr_r[HADDR_WIDTH-(BANK_WIDTH+ROW_WIDTH+1):0]};
+     // Set bank to bank to precharge
+     bank_addr_r <= haddr_r[HADDR_WIDTH-1:HADDR_WIDTH-(BANK_WIDTH)];
+     
+     // Examples for math
+     //               BANK  ROW    COL
+     // HADDR_WIDTH   2 +   13 +   9   = 24
+     // SDRADDR_WIDTH 13 
+     
+     // Set address to 000s + 1 (for auto precharge) + column address
+     addr_r <= {{SDRADDR_WIDTH-(COL_WIDTH+1){1'b0}}, 1'b1, haddr_r[COL_WIDTH-1:0]};
      end     
    else if ((top_state == INIT) & (sub_state == INIT_LOAD))
      begin
-     bank_addr_r <= 2'b0;
+     bank_addr_r <= 2'b00;
      // Program mode register during load cycle
      //                                       B  C  SB
      //                                       R  A  EUR
@@ -494,7 +511,7 @@ always @ (posedge clk)
      end
    else 
      begin 
-     bank_addr_r <= 2'b0;
+     bank_addr_r <= 2'b00;
      addr_r <= {SDRADDR_WIDTH{1'b0}};
      end
    
