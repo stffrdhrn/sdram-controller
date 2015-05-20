@@ -214,9 +214,57 @@ agreement for further details.
 	(text "VCC" (rect 4 7 24 16)(font "Arial" (font_size 6)))
 )
 (symbol
+	(rect -136 360 104 504)
+	(text "pll" (rect 114 0 129 15)(font "Arial" (font_size 10)))
+	(text "plli" (rect 8 130 20 140)(font "Arial" ))
+	(port
+		(pt 0 64)
+		(input)
+		(text "inclk0" (rect 0 0 31 12)(font "Arial" (font_size 8)))
+		(text "inclk0" (rect 4 52 35 64)(font "Arial" (font_size 8)))
+		(line (pt 0 64)(pt 40 64))
+	)
+	(port
+		(pt 240 64)
+		(output)
+		(text "c0" (rect 0 0 14 12)(font "Arial" (font_size 8)))
+		(text "c0" (rect 224 52 238 64)(font "Arial" (font_size 8)))
+	)
+	(drawing
+		(text "Cyclone IV E" (rect 164 131 230 141)(font "Arial" ))
+		(text "inclk0 frequency: 50.000 MHz" (rect 50 60 197 70)(font "Arial" ))
+		(text "Operation Mode: Normal" (rect 50 71 169 81)(font "Arial" ))
+		(text "Clk " (rect 51 89 71 99)(font "Arial" ))
+		(text "Ratio" (rect 75 89 100 99)(font "Arial" ))
+		(text "Ph (dg)" (rect 104 89 139 99)(font "Arial" ))
+		(text "DC (%)" (rect 138 89 174 99)(font "Arial" ))
+		(text "c0" (rect 54 101 65 111)(font "Arial" ))
+		(text "133/50" (rect 72 101 105 111)(font "Arial" ))
+		(text "0.00" (rect 110 101 131 111)(font "Arial" ))
+		(text "50.00" (rect 142 101 169 111)(font "Arial" ))
+		(line (pt 0 0)(pt 241 0))
+		(line (pt 241 0)(pt 241 145))
+		(line (pt 0 145)(pt 241 145))
+		(line (pt 0 0)(pt 0 145))
+		(line (pt 48 87)(pt 170 87))
+		(line (pt 48 98)(pt 170 98))
+		(line (pt 48 110)(pt 170 110))
+		(line (pt 48 87)(pt 48 110))
+		(line (pt 69 87)(pt 69 110)(line_width 3))
+		(line (pt 101 87)(pt 101 110)(line_width 3))
+		(line (pt 135 87)(pt 135 110)(line_width 3))
+		(line (pt 169 87)(pt 169 110))
+		(line (pt 40 48)(pt 207 48))
+		(line (pt 207 48)(pt 207 127))
+		(line (pt 40 127)(pt 207 127))
+		(line (pt 40 48)(pt 40 127))
+		(line (pt 239 64)(pt 207 64))
+	)
+)
+(symbol
 	(rect 192 216 544 456)
 	(text "sdram_controller" (rect 5 0 86 10)(font "Arial" ))
-	(text "inst" (rect 8 224 25 234)(font "Arial" ))
+	(text "sdram_controlleri" (rect 8 224 91 234)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -360,12 +408,12 @@ agreement for further details.
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
 		"SDRADDR_WIDTH"
-		""
+		"13"
 		""
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
 		"HADDR_WIDTH"
-		""
+		"24"
 		""
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
@@ -386,69 +434,38 @@ agreement for further details.
 	(drawing
 		(rectangle (rect 16 16 336 224))
 	)
-	(annotation_block (parameter)(rect 544 104 760 216))
-)
-(symbol
-	(rect -136 360 104 504)
-	(text "pll" (rect 114 0 129 15)(font "Arial" (font_size 10)))
-	(text "inst" (rect 8 130 25 140)(font "Arial" ))
-	(port
-		(pt 0 64)
-		(input)
-		(text "inclk0" (rect 0 0 31 12)(font "Arial" (font_size 8)))
-		(text "inclk0" (rect 4 52 35 64)(font "Arial" (font_size 8)))
-		(line (pt 0 64)(pt 40 64))
-	)
-	(port
-		(pt 240 64)
-		(output)
-		(text "c0" (rect 0 0 14 12)(font "Arial" (font_size 8)))
-		(text "c0" (rect 224 52 238 64)(font "Arial" (font_size 8)))
-	)
-	(drawing
-		(text "Cyclone IV E" (rect 164 131 230 141)(font "Arial" ))
-		(text "inclk0 frequency: 50.000 MHz" (rect 50 60 197 70)(font "Arial" ))
-		(text "Operation Mode: Normal" (rect 50 71 169 81)(font "Arial" ))
-		(text "Clk " (rect 51 89 71 99)(font "Arial" ))
-		(text "Ratio" (rect 75 89 100 99)(font "Arial" ))
-		(text "Ph (dg)" (rect 104 89 139 99)(font "Arial" ))
-		(text "DC (%)" (rect 138 89 174 99)(font "Arial" ))
-		(text "c0" (rect 54 101 65 111)(font "Arial" ))
-		(text "133/50" (rect 72 101 105 111)(font "Arial" ))
-		(text "0.00" (rect 110 101 131 111)(font "Arial" ))
-		(text "50.00" (rect 142 101 169 111)(font "Arial" ))
-		(line (pt 0 0)(pt 241 0))
-		(line (pt 241 0)(pt 241 145))
-		(line (pt 0 145)(pt 241 145))
-		(line (pt 0 0)(pt 0 145))
-		(line (pt 48 87)(pt 170 87))
-		(line (pt 48 98)(pt 170 98))
-		(line (pt 48 110)(pt 170 110))
-		(line (pt 48 87)(pt 48 110))
-		(line (pt 69 87)(pt 69 110)(line_width 3))
-		(line (pt 101 87)(pt 101 110)(line_width 3))
-		(line (pt 135 87)(pt 135 110)(line_width 3))
-		(line (pt 169 87)(pt 169 110))
-		(line (pt 40 48)(pt 207 48))
-		(line (pt 207 48)(pt 207 127))
-		(line (pt 40 127)(pt 207 127))
-		(line (pt 40 48)(pt 40 127))
-		(line (pt 239 64)(pt 207 64))
-	)
-)
-(connector
-	(pt 192 312)
-	(pt 24 312)
-)
-(connector
-	(pt 544 280)
-	(pt 592 280)
-	(bus)
+	(annotation_block (parameter)(rect 544 104 758 212))
 )
 (connector
 	(pt 696 408)
 	(pt 640 408)
 	(bus)
+)
+(connector
+	(pt 104 424)
+	(pt 144 424)
+)
+(connector
+	(pt 144 472)
+	(pt 632 472)
+)
+(connector
+	(pt -240 424)
+	(pt -136 424)
+)
+(connector
+	(pt 592 280)
+	(pt 544 280)
+	(bus)
+)
+(connector
+	(pt 592 296)
+	(pt 544 296)
+	(bus)
+)
+(connector
+	(pt 24 312)
+	(pt 192 312)
 )
 (connector
 	(text "DRAM_DQM[0]" (rect 554 400 629 410)(font "Arial" ))
@@ -461,57 +478,40 @@ agreement for further details.
 	(pt 608 424)
 )
 (connector
-	(pt 544 296)
-	(pt 592 296)
-	(bus)
-)
-(connector
-	(pt 544 344)
-	(pt 592 344)
-)
-(connector
-	(pt 544 360)
-	(pt 592 360)
-)
-(connector
-	(pt 544 376)
-	(pt 592 376)
-)
-(connector
-	(pt 544 328)
-	(pt 592 328)
-)
-(connector
-	(pt 544 392)
-	(pt 592 392)
-)
-(connector
-	(pt 544 312)
 	(pt 592 312)
+	(pt 544 312)
 	(bus)
 )
 (connector
-	(pt 104 424)
-	(pt 144 424)
+	(pt 592 328)
+	(pt 544 328)
+)
+(connector
+	(pt 592 344)
+	(pt 544 344)
+)
+(connector
+	(pt 592 360)
+	(pt 544 360)
+)
+(connector
+	(pt 592 376)
+	(pt 544 376)
+)
+(connector
+	(pt 592 392)
+	(pt 544 392)
 )
 (connector
 	(pt 144 328)
 	(pt 192 328)
 )
 (connector
-	(pt 144 472)
-	(pt 632 472)
-)
-(connector
 	(pt 144 328)
 	(pt 144 424)
 )
 (connector
 	(pt 144 424)
 	(pt 144 472)
-)
-(connector
-	(pt -240 424)
-	(pt -136 424)
 )
 (junction (pt 144 424))
