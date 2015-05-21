@@ -206,7 +206,7 @@ always @ (posedge clk)
     else 
       haddr_r <= haddr_r;
     
-    if (~state_counter)
+    if (!state_counter)
       begin
       state_counter <= next_wait;
       end
@@ -264,7 +264,7 @@ begin
         
       INIT:
         // Init SDRAM 
-        if (~state_counter)
+        if (!state_counter)
         case (sub_state)
           INIT_NOP1:
             begin
@@ -332,7 +332,7 @@ begin
             next_command <= command;
             end
       REFRESH:
-        if (~state_counter)
+        if (!state_counter)
         case(sub_state)
           REF_PRE:
             begin
@@ -373,7 +373,7 @@ begin
           next_command <= command;
           end
       WRITE:
-        if (~state_counter)
+        if (!state_counter)
         case(sub_state)
           WRIT_ACT:
             begin
@@ -414,7 +414,7 @@ begin
           next_command <= command;
           end
       READ:
-        if (~state_counter)
+        if (!state_counter)
         case(sub_state)
           READ_ACT:
             begin
