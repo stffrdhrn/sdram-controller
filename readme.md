@@ -41,7 +41,10 @@ From tje above diafram most signals should be pretty much self explainatory. Her
 
 ## Project Status/TODO
  - [x] Compiles
- - [ ] Simulated
+ - [x] Simulated `Init`
+ - [x] Simulated `Refresh`
+ - [ ] Simulated `Read`
+ - [ ] Simulated `Write`
  - [ ] Confirmed in De0 Nano
 
 ## Project Setup
