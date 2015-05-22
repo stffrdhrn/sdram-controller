@@ -20,7 +20,7 @@ module init_tb();
 initial 
 begin
   haddr = 24'd0;
-  data_input = 15'd0;
+  data_input = 16'd0;
   rd_enable = 1'b0;
   wr_enable = 1'b0;
   rst_n = 1'b1;
@@ -34,6 +34,16 @@ initial
 begin
   #3 rst_n = 1'b0;
   #3 rst_n = 1'b1;
+  
+  #120 haddr = 24'd324;
+  data_input = 16'd3333;
+  
+  #3 wr_enable = 1'b1;
+  #6 wr_enable = 1'b0;
+  haddr = 24'd0;
+  data_input = 16'd0;  
+  
+  
   
 end
   
