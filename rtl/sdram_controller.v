@@ -44,41 +44,33 @@ parameter REFRESH_COUNT = 8192; // cycles (how many refreshes required per refre
 //                , ref / refbatch
 localparam CYCLES_BETWEEN_REFRESH = ( CLK_FREQUENCY * 1_000 * REFRESH_TIME ) / REFRESH_COUNT;
 
-// STATES - TOP LEVEL
-localparam IDLE    = 3'b000,
-           INIT    = 3'b001,
-           REFRESH = 3'b010,
-           READ    = 3'b011,
-           WRITE   = 3'b100;
+// STATES - State
+localparam IDLE      = 5'b00000;
+
+localparam INIT_NOP1 = 5'b01000,
+           INIT_PRE1 = 5'b01001,
+           INIT_REF1 = 5'b01010,
+           INIT_NOP2 = 5'b01011,
+           INIT_REF2 = 5'b01100,
+           INIT_NOP3 = 5'b01101,
+           INIT_LOAD = 5'b01110,
+           INIT_NOP4 = 5'b01111;
+
+localparam REF_PRE  =  5'b00001,
+           REF_NOP1 =  5'b00010,
+           REF_REF  =  5'b00011,
+           REF_NOP2 =  5'b00100;
+
+localparam READ_ACT  = 5'b10000,
+           READ_NOP1 = 5'b10001,
+           READ_CAS  = 5'b10010,
+           READ_NOP2 = 5'b10011,
+           READ_READ = 5'b10100;
            
-
-// STATES - SUB LEVEL
-localparam IDLE_IDLE = 3'b000;
-
-localparam INIT_NOP1 = 3'b000,
-           INIT_PRE1 = 3'b001,
-           INIT_REF1 = 3'b010,
-           INIT_NOP2 = 3'b011,
-           INIT_REF2 = 3'b100,
-           INIT_NOP3 = 3'b101,
-           INIT_LOAD = 3'b110,
-           INIT_NOP4 = 3'b111;
-
-localparam REF_PRE  =  3'b000,
-           REF_NOP1 =  3'b001,
-           REF_REF  =  3'b010,
-           REF_NOP2 =  3'b100;
-
-localparam READ_ACT  = 3'b000,
-           READ_NOP1 = 3'b001,
-           READ_CAS  = 3'b010,
-           READ_NOP2 = 3'b011,
-           READ_READ = 3'b100;
-           
-localparam WRIT_ACT  = 3'b000,
-           WRIT_NOP1 = 3'b001,
-           WRIT_CAS  = 3'b010,
-           WRIT_NOP2 = 3'b011;
+localparam WRIT_ACT  = 5'b11000,
+           WRIT_NOP1 = 5'b11001,
+           WRIT_CAS  = 5'b11010,
+           WRIT_NOP2 = 5'b11011;
           
 // Commands              CCRCWBBA
 //                       ESSSE100
@@ -134,29 +126,24 @@ assign data_output    = data_output_r;
 assign busy           = busy_r;
 
 /* Internal Wiring */
-reg [3:0] state_counter;
-reg [9:0] refresh_counter;
+reg [3:0] state_cnt;
+reg [9:0] refresh_cnt;
 
 reg [7:0] command;
-reg [2:0] top_state;
-reg [2:0] sub_state;
+reg [4:0] state;
 
 // TODO output addr[6:4] when programming mode register
 
-reg [7:0]                next_command;
-reg [3:0]                next_wait;
-reg [2:0]                next_top;
-reg [2:0]                next_sub;
+reg [7:0] command_nxt;
+reg [3:0] state_cnt_nxt;
+reg [4:0] next;
 
 assign {clock_enable, cs_n, ras_n, cas_n, we_n} = command[7:3];
-assign bank_addr[1:0] = (top_state == READ | top_state == WRITE) ? bank_addr_r : command[2:1];
-assign addr           = (  top_state == READ 
-                         | top_state == WRITE 
-                         | ((top_state == INIT) & (sub_state == INIT_LOAD))
-                        ) ? addr_r 
-                        : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
+// state[4] will be set if mode is read/write
+assign bank_addr[1:0] = (state[4]) ? bank_addr_r : command[2:1];
+assign addr           = (state[4] | state == INIT_LOAD) ? addr_r : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
                         
-assign data = (top_state == WRITE & sub_state == WRIT_CAS) ? data_input_r : 16'bz;
+assign data = (state == WRIT_CAS) ? data_input_r : 16'bz;
 
 // Handle 
 //   state counter 
@@ -165,10 +152,9 @@ assign data = (top_state == WRITE & sub_state == WRIT_CAS) ? data_input_r : 16'b
 always @ (posedge clk)
   if (~rst_n)
     begin
-    top_state <= INIT;
-    sub_state <= INIT_NOP1;
+    state <= INIT_NOP1;
     command <= CMD_NOP;
-    state_counter <= 4'hf;
+    state_cnt <= 4'hf;
     haddr_r <= {HADDR_WIDTH{1'b0}};
     data_input_r <= 16'b0;
     data_output_r <= 16'b0;
@@ -177,11 +163,10 @@ always @ (posedge clk)
     end
   else 
     begin
-    top_state <= next_top;
-    sub_state <= next_sub;
-    command <= next_command;
+    state <= next;
+    command <= command_nxt;
     
-    if (top_state == READ | top_state == WRITE)
+    if (state[4])
       {data_mask_low_r, data_mask_high_r} <= 2'b00;
     else 
       {data_mask_low_r, data_mask_high_r} <= 2'b11;
@@ -191,12 +176,12 @@ always @ (posedge clk)
     else 
       data_input_r <= data_input_r;
     
-    if (top_state == READ & sub_state == READ_READ)
+    if (state == READ_READ)
       data_output_r <= data;
     else
       data_output_r <= data_output_r;
     
-    if (top_state == READ | top_state == WRITE) 
+    if (state[4]) 
       busy_r <= 1'b1;
     else
       busy_r <= 1'b0;
@@ -206,270 +191,188 @@ always @ (posedge clk)
     else 
       haddr_r <= haddr_r;
     
-    if (!state_counter)
+    if (!state_cnt)
       begin
-      state_counter <= next_wait;
+      state_cnt <= state_cnt_nxt;
       end
     else
       begin
-      state_counter <= state_counter - 1'b1;
+      state_cnt <= state_cnt - 1'b1;
       end
     end
 
 // Handle refresh counter
 always @ (posedge clk) 
  if (~rst_n) 
-   refresh_counter <= 10'b0;
+   refresh_cnt <= 10'b0;
  else
-   if (top_state == REFRESH)
-     refresh_counter <= 10'b0;
+   if (state == REF_NOP2)
+     refresh_cnt <= 10'b0;
    else 
-     refresh_counter <= refresh_counter + 1'b1;
+     refresh_cnt <= refresh_cnt + 1'b1;
 
 // Next state logic
 always @* 
 begin
-   case (top_state)
-      IDLE:
+   if (state == IDLE)
         // Monitor for refresh or hold
-        if (refresh_counter >= CYCLES_BETWEEN_REFRESH)
+        if (refresh_cnt >= CYCLES_BETWEEN_REFRESH)
           begin
-          next_top <= REFRESH;
-          next_sub <= REF_PRE;
-          next_wait <= 4'd1;
-          next_command <= CMD_PALL;
+          next <= REF_PRE;
+          state_cnt_nxt <= 4'd1;
+          command_nxt <= CMD_PALL;
           end
         else if (rd_enable)
           begin
-          next_top <= READ;
-          next_sub <= READ_ACT;
-          next_wait <= 4'd1;
-          next_command <= CMD_BACT;
+          next <= READ_ACT;
+          state_cnt_nxt <= 4'd1;
+          command_nxt <= CMD_BACT;
           end
         else if (wr_enable)
           begin
-          next_top <= WRITE;
-          next_sub <= WRIT_ACT;
-          next_wait <= 4'd1;
-          next_command <= CMD_BACT;
+          next <= WRIT_ACT;
+          state_cnt_nxt <= 4'd1;
+          command_nxt <= CMD_BACT;
           end
         else 
           begin
           // HOLD
-          next_top <= top_state;
-          next_sub <= sub_state;
-          next_wait <= 4'd0;
-          next_command <= command;
+          next <= IDLE;
+          state_cnt_nxt <= 4'd0;
+          command_nxt <= CMD_NOP;
           end
-        
-      INIT:
-        // Init SDRAM 
-        if (!state_counter)
-        case (sub_state)
+    else
+      if (!state_cnt)
+        case (state)
+          // INIT ENGINE
           INIT_NOP1:
             begin
-            next_top <= INIT;
-            next_sub <= INIT_PRE1;
-            next_wait <= 4'd2;
-            next_command <= CMD_PALL;
+            next <= INIT_PRE1;
+            state_cnt_nxt <= 4'd2;
+            command_nxt <= CMD_PALL;
             end
           INIT_PRE1:
             begin
-            next_top <= INIT;
-            next_sub <= INIT_REF1;
-            next_wait <= 4'd1;
-            next_command <= CMD_REF;
+            next <= INIT_REF1;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_REF;
             end
           INIT_REF1:
             begin
-            next_top <= INIT;
-            next_sub <= INIT_NOP2;
-            next_wait <= 4'd8;
-            next_command <= CMD_NOP;
+            next <= INIT_NOP2;
+            state_cnt_nxt <= 4'd8;
+            command_nxt <= CMD_NOP;
             end
           INIT_NOP2:
             begin
-            next_top <= INIT;
-            next_sub <= INIT_REF2;
-            next_wait <= 4'd1;
-            next_command <= CMD_REF;
+            next <= INIT_REF2;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_REF;
             end
           INIT_REF2:
             begin
-            next_top <= INIT;
-            next_sub <= INIT_NOP3;
-            next_wait <= 4'd8;
-            next_command <= CMD_NOP;
+            next <= INIT_NOP3;
+            state_cnt_nxt <= 4'd8;
+            command_nxt <= CMD_NOP;
             end
           INIT_NOP3:
             begin
-            next_top <= INIT;
-            next_sub <= INIT_LOAD;
-            next_wait <= 4'd1;
-            next_command <= CMD_MRS;        
+            next <= INIT_LOAD;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_MRS;        
             end
           INIT_LOAD:
             begin
-            next_top <= INIT;
-            next_sub <= INIT_NOP4;
-            next_wait <= 4'd2;
-            next_command <= CMD_NOP;
+            next <= INIT_NOP4;
+            state_cnt_nxt <= 4'd2;
+            command_nxt <= CMD_NOP;
             end
-          INIT_NOP4:
-            begin
-            next_top <= IDLE;
-            next_sub <= IDLE_IDLE;
-            next_wait <= 4'd0;
-            next_command <= CMD_NOP;
-            end
-          endcase
-         else 
-            begin
-            // HOLD
-            next_top <= top_state;
-            next_sub <= sub_state;
-            next_wait <= 4'd0;
-            next_command <= command;
-            end
-      REFRESH:
-        if (!state_counter)
-        case(sub_state)
+          // INIT_NOP4: default - IDLE
+
+          // REFRESH
           REF_PRE:
             begin
-            next_top <= REFRESH;
-            next_sub <= REF_NOP1;
-            next_wait <= 4'd1;
-            next_command <= CMD_NOP;
+            next <= REF_NOP1;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_NOP;
             end
           REF_NOP1:
             begin
-            next_top <= REFRESH;
-            next_sub <= REF_REF;
-            next_wait <= 4'd1;
-            next_command <= CMD_REF;
+            next <= REF_REF;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_REF;
             end
           REF_REF:
             begin
-            next_top <= REFRESH;
-            next_sub <= REF_NOP2;
-            next_wait <= 4'd8;
-            next_command <= CMD_NOP;
+            next <= REF_NOP2;
+            state_cnt_nxt <= 4'd8;
+            command_nxt <= CMD_NOP;
             end
-          default:
-            begin
-            next_top <= IDLE;
-            next_sub <= IDLE_IDLE;
-            next_wait <= 4'd0;
-            next_command <= CMD_NOP;
-            end  
-        endcase 
-               
-        else
-          begin
-          // HOLD
-          next_top <= top_state;
-          next_sub <= sub_state;
-          next_wait <= 4'd0;
-          next_command <= command;
-          end
-      WRITE:
-        if (!state_counter)
-        case(sub_state)
+          // REF_NOP2: default - IDLE
+
+          // WRITE
           WRIT_ACT:
             begin
-            next_top <= WRITE;
-            next_sub <= WRIT_NOP1;
-            next_wait <= 4'd2;
-            next_command <= CMD_NOP;
+            next <= WRIT_NOP1;
+            state_cnt_nxt <= 4'd2;
+            command_nxt <= CMD_NOP;
             end
           WRIT_NOP1:
             begin
-            next_top <= WRITE;
-            next_sub <= WRIT_CAS;
-            next_wait <= 4'd1;
-            next_command <= CMD_WRIT;
+            next <= WRIT_CAS;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_WRIT;
             end
           WRIT_CAS:
             begin
-            next_top <= WRITE;
-            next_sub <= WRIT_NOP2;
-            next_wait <= 4'd2;
-            next_command <= CMD_NOP;
+            next <= WRIT_NOP2;
+            state_cnt_nxt <= 4'd2;
+            command_nxt <= CMD_NOP;
             end
-          default:
-            begin
-            next_top <= IDLE;
-            next_sub <= IDLE_IDLE;
-            next_wait <= 4'd0;
-            next_command <= CMD_NOP;
-            end  
-        endcase 
-               
-        else
-          begin
-          // HOLD
-          next_top <= top_state;
-          next_sub <= sub_state;
-          next_wait <= 4'd0;
-          next_command <= command;
-          end
-      READ:
-        if (!state_counter)
-        case(sub_state)
+          // WRIT_NOP2: default - IDLE
+          
+          // READ
           READ_ACT:
             begin
-            next_top <= READ;
-            next_sub <= READ_NOP1;
-            next_wait <= 4'd2;
-            next_command <= CMD_NOP;
+            next <= READ_NOP1;
+            state_cnt_nxt <= 4'd2;
+            command_nxt <= CMD_NOP;
             end
           READ_NOP1:
             begin
-            next_top <= READ;
-            next_sub <= READ_CAS;
-            next_wait <= 4'd1;
-            next_command <= CMD_READ;
+            next <= READ_CAS;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_READ;
             end
           READ_CAS:
             begin
-            next_top <= READ;
-            next_sub <= READ_NOP2;
-            next_wait <= 4'd2;
-            next_command <= CMD_NOP;
+            next <= READ_NOP2;
+            state_cnt_nxt <= 4'd2;
+            command_nxt <= CMD_NOP;
             end
           READ_NOP2:
             begin
-            next_top <= READ;
-            next_sub <= READ_READ;
-            next_wait <= 4'd1;
-            next_command <= CMD_NOP;
+            next <= READ_READ;
+            state_cnt_nxt <= 4'd1;
+            command_nxt <= CMD_NOP;
             end
+          // READ_READ: default - IDLE
+          
           default:
             begin
-            next_top <= IDLE;
-            next_sub <= IDLE_IDLE;
-            next_wait <= 4'd0;
-            next_command <= CMD_NOP;
-            end  
-        endcase 
-               
-        else
-          begin
-          // HOLD
-          next_top <= top_state;
-          next_sub <= sub_state;
-          next_wait <= 4'd0;
-          next_command <= command;
-          end
-      default:
+            next <= IDLE;
+            state_cnt_nxt <= 4'd0;
+            command_nxt <= CMD_NOP;
+            end
+          endcase
+      else
         begin
-        // HOLD
-        next_top <= top_state;
-        next_sub <= sub_state;
-        next_wait <= 4'd0;
-        next_command <= command;
+        // Counter Not Reached - HOLD
+        next <= state;
+        state_cnt_nxt <= 4'd0;
+        command_nxt <= command;
         end
-   endcase
+   
 end
 
 /* Handle logic for sending addresses and commands to SDRAM based on current state*/
@@ -480,12 +383,12 @@ always @ (posedge clk)
      addr_r <= {SDRADDR_WIDTH{1'b0}};
     end
   else
-   if ((top_state == READ | top_state == WRITE) & sub_state == READ_ACT)
+   if (state == READ_ACT | state == WRIT_ACT)
      begin
      bank_addr_r <= haddr_r[HADDR_WIDTH-1:HADDR_WIDTH-(BANK_WIDTH)];
      addr_r <= haddr_r[HADDR_WIDTH-(BANK_WIDTH+1):HADDR_WIDTH-(BANK_WIDTH+ROW_WIDTH)];
      end
-   else if ((top_state == READ | top_state == WRITE) & sub_state == READ_CAS)
+   else if (state == READ_CAS | state == WRIT_CAS)
      begin
      // Send Column Address
      // Set bank to bank to precharge
@@ -499,7 +402,7 @@ always @ (posedge clk)
      // Set address to 000s + 1 (for auto precharge) + column address
      addr_r <= {{SDRADDR_WIDTH-(COL_WIDTH+1){1'b0}}, 1'b1, haddr_r[COL_WIDTH-1:0]};
      end     
-   else if ((top_state == INIT) & (sub_state == INIT_LOAD))
+   else if (state == INIT_LOAD)
      begin
      bank_addr_r <= 2'b00;
      // Program mode register during load cycle
