@@ -53,7 +53,7 @@ begin
   #6 rd_enable = 1'b0;
   haddr = 24'd0;
   
-  #6 data_r = 16'hbbbb;
+  #8 data_r = 16'hbbbb;
   #2 data_r = 16'hzzzz;
   
 end

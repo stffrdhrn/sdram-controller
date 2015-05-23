@@ -112,10 +112,13 @@ reg  [HADDR_WIDTH-1:0]   haddr_r;
 reg  [15:0]              data_input_r;
 reg  [15:0]              data_output_r;
 reg                      busy_r;
+reg                      wr_enable_r;
+reg                      rd_enable_r;
 reg                      data_mask_low_r;
 reg                      data_mask_high_r;
 reg [SDRADDR_WIDTH-1:0]  addr_r;
 reg [BANK_WIDTH-1:0]     bank_addr_r;
+
 
 wire [15:0]              data_output;
 wire                     busy;
@@ -155,9 +158,15 @@ always @ (posedge clk)
     data_input_r <= 16'b0;
     data_output_r <= 16'b0;
     busy_r <= 1'b0;
+    wr_enable_r <= 1'b0;
+    rd_enable_r <= 1'b0;
     end
   else 
     begin
+    
+    /* These are used for controlling/syncing negedge state transaciton */
+    wr_enable_r <= wr_enable;
+    rd_enable_r <= rd_enable;
     
     if (wr_enable)
       data_input_r <= data_input;
@@ -274,13 +283,13 @@ begin
           state_cnt_nxt <= 4'd0;
           command_nxt <= CMD_PALL;
           end
-        else if (rd_enable)
+        else if (rd_enable_r)
           begin
           next <= READ_ACT;
           state_cnt_nxt <= 4'd0;
           command_nxt <= CMD_BACT;
           end
-        else if (wr_enable)
+        else if (wr_enable_r)
           begin
           next <= WRIT_ACT;
           state_cnt_nxt <= 4'd0;
