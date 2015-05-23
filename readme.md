@@ -43,9 +43,14 @@ From tje above diafram most signals should be pretty much self explainatory. Her
  - [x] Compiles
  - [x] Simulated `Init`
  - [x] Simulated `Refresh`
- - [ ] Simulated `Read`
- - [ ] Simulated `Write`
+ - [x] Simulated `Read`
+ - [x] Simulated `Write`
  - [ ] Confirmed in De0 Nano
+
+ - Found a race condition when the host starts a read/write operation on the 
+   negedge of clk.  The controller switched to read/write state before capturing
+   the address.  This causes an incorrect address to be put on the bus for RAS.
+
 
 ## Project Setup
 This project has been developed with altera quartus II. 
