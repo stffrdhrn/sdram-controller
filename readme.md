@@ -5,6 +5,7 @@
 Theory is to get a simple controller to work on the De0 Nano
 
 Basic features
+ - ~50 LEs
  - Operates at 133Mhz, CAS 3, 32MB, 16-bit data
  - On reset will go into `INIT` sequnce
  - After `INIT` the controller sits in `IDLE` waiting for `REFRESH`, `READ` or `WRITE` 
@@ -32,7 +33,7 @@ Basic features
 
 ```
 
-From tje above diafram most signals should be pretty much self explainatory. Here are some important points for now.  It will be expanded on later. 
+From the above diagram most signals should be pretty much self explainatory. Here are some important points for now.  It will be expanded on later. 
  - `haddr` is equivelant to the concatenation of `{bank, row, column}`
  - `rd_enable` should be set to high once an address is presented on the `addr` bus and we wish to read data. 
  - `wr_enable` should be set to high once `addr` and `data` is presented on the bus
@@ -53,3 +54,8 @@ This project has been developed with altera quartus II.
 
 ## License
 BSD
+
+## Further Reading
+I didn't look at these when designing my controller.  But it might be good to take a look at for ideas. 
+ - http://hamsterworks.co.nz/mediawiki/index.php/Simple_SDRAM_Controller - featured on hack-a-day
+ - http://ladybug.xs4all.nl/arlet/fpga/source/sdram.v - comment saying this is another implementation
