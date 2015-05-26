@@ -3,7 +3,7 @@
  * to talk to the sdram controller.
  */
 
-module dn_interface (
+module dnano_interface (
   /* Human Interface */
   button, dip, leds,
 
@@ -85,4 +85,11 @@ always @ (posedge clk)
    else 
     // working on capturing single button press... this doesnt work 
    end
+
+double_click double_clicki (
+  .button(button), .single(wr_enable), .double(rd_enable),  .clk(clk), .rst_n(dbl_clck_rst_n)
+);
+
+
+
 endmodule
