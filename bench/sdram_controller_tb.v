@@ -1,8 +1,10 @@
 /**
- * Testbench for receiver module
- * Simulates a 8n1 byte being revived
+ * Testbench for sdram_controller modules, simulates:
+ *  - Iinit
+ *  - Write
+ *  - Read
  */
-module init_tb();
+module sdram_controller_tb();
 
     /* HOST CONTROLLS */
     reg [23:0]  haddr;

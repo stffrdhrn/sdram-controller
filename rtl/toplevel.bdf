@@ -24,7 +24,7 @@ agreement for further details.
 	(input)
 	(rect -144 304 24 320)
 	(text "INPUT" (rect 125 0 153 9)(font "Arial" (font_size 6)))
-	(text "RESET" (rect 5 0 41 10)(font "Arial" ))
+	(text "RESET" (rect 5 0 40 10)(font "Arial" ))
 	(pt 168 8)
 	(drawing
 		(line (pt 84 12)(pt 109 12))
@@ -40,7 +40,7 @@ agreement for further details.
 	(input)
 	(rect -408 416 -240 432)
 	(text "INPUT" (rect 125 0 153 9)(font "Arial" (font_size 6)))
-	(text "CLOCK_50" (rect 5 0 61 10)(font "Arial" ))
+	(text "CLOCK_50" (rect 5 0 60 10)(font "Arial" ))
 	(pt 168 8)
 	(drawing
 		(line (pt 84 12)(pt 109 12))
@@ -454,11 +454,6 @@ agreement for further details.
 	(pt -136 424)
 )
 (connector
-	(pt 592 280)
-	(pt 544 280)
-	(bus)
-)
-(connector
 	(pt 592 296)
 	(pt 544 296)
 	(bus)
@@ -513,5 +508,10 @@ agreement for further details.
 (connector
 	(pt 144 424)
 	(pt 144 472)
+)
+(connector
+	(pt 544 280)
+	(pt 592 280)
+	(bus)
 )
 (junction (pt 144 424))
