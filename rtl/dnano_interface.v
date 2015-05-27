@@ -16,6 +16,9 @@ module dnano_interface (
 );
 
 parameter HADDR_WIDTH = 24;
+
+// @ 1mhz 19bit is about 1/2 second
+localparam DOUBlE_CLICK_WAIT = 19;
  
 input        button;
 input  [3:0] dip;
@@ -31,19 +34,30 @@ output                     wr_enable;
 input                      rst_n;
 input                      clk;
 
-wire  [15:0] data_input;
-wire  [15:0] data_output;
-reg   [20:0] led_cnt;
-wire  [7:0]  leds;
+reg   [HADDR_WIDTH-1:0]   haddr;
+wire  [15:0]              data_input;
+reg   [15:0]              data_output_r;
+reg   [20:0]              led_cnt;
+wire  [7:0]               leds;
+wire                      wr_enable;
 
-reg   rd_enable_r, wr_enable_r;
+wire  dbl_clck_rst_n;
 reg   [19:0] dbl_click_cnt;
 reg   [2:0] click_cnt;
+
+
+// When to reset the double click output
+// busy | rst_n
+//  0      0     - reset is on  (be-low )
+//  0      1     - reset is off (be high)
+//  1      0     - busy + reset (be-low)
+//  1      1     - busy  is on  (be-low)
+assign dbl_clck_rst_n = rst_n & ~busy;
 
 // expand the dip data from 4 to 16 bits
 assign data_input = {dip, dip, ~dip, ~dip};
 // toggle leds between sdram msb and lsb
-assign leds = led_cnt[20] ? data_output[15:8] : data_output[7:0]; 
+assign leds = led_cnt[20] ? data_output_r[15:8] : data_output_r[7:0]; 
 
 // handle led counter should just loop every half second
 always @ (posedge clk) 
@@ -51,42 +65,41 @@ always @ (posedge clk)
   led_cnt <= 21'd0;
  else
   led_cnt <= led_cnt + 1'b1;
+   
+// when busy goes down, we need to read data on the next clk
 
-// handle button and read/write
-//  single-click write
-//  double-click read
-// writes always generate a new sdram address
+reg [1:0] busy_sr;
+reg       read;
+wire data_ready = (read & (busy_sr == 2'b10));
+
 always @ (posedge clk)
  if (~rst_n)
    begin
-   rd_enable_r <= 1'b0;
-   wr_enable_r <= 1'b0;
-   dbl_click_cnt <= 20'd0;
-   click_cnt <= 3'b000;
+   busy_sr <= 2'b00;
+   read <= 1'b0;
+   data_output_r <= 16'b0;
+   haddr <= {HADDR_WIDTH{1'b0}};
    end
  else
    begin
-   if (button | click_cnt) // something was clicked
-     if (dcl_click_cnt[20]) 
-       if (click_cnt == 3'b001)
-         wr_enable_r <= 1'b1;
-       else
-         rd_enable_r <= 1'b1;
-       dbl_click_cnt <= 20'd0;
-     else 
-       begin
-         dbl_click_cnt <= dbl_click_cnt + 1'b1;
-         rd_enable_r <= 1'b0;
-         wr_enable_r <= 1'b0;
-       end
+   haddr <= haddr;
+   if (rd_enable)
+     read <= 1'b1;
+   else if (data_ready)
+     read <= 1'b0;
+   else
+     read <= read;
+     
+   busy_sr <= {busy_sr[0], busy};
    
-   if (button)
-     click_cnt <= click_cnt + 1'b1;
+   if (data_ready)
+     data_output_r <= data_output;
    else 
-    // working on capturing single button press... this doesnt work 
+     data_output_r <= data_output_r;
+     
    end
-
-double_click double_clicki (
+   
+double_click #(.WAIT_WIDTH(DOUBlE_CLICK_WAIT)) double_clicki (
   .button(button), .single(wr_enable), .double(rd_enable),  .clk(clk), .rst_n(dbl_clck_rst_n)
 );
 
