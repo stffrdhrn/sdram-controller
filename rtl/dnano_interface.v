@@ -5,7 +5,7 @@
 
 module dnano_interface (
   /* Human Interface */
-  button, dip, leds,
+  button_n, dip, leds,
 
   /* Controller Interface */
   haddr, data_input, data_output, busy, rd_enable, wr_enable, 
@@ -20,7 +20,7 @@ parameter HADDR_WIDTH = 24;
 // @ 1mhz 19bit is about 1/2 second
 localparam DOUBlE_CLICK_WAIT = 19;
  
-input        button;
+input        button_n;
 input  [3:0] dip;
 output [7:0] leds;
 
@@ -100,7 +100,7 @@ always @ (posedge clk)
    end
    
 double_click #(.WAIT_WIDTH(DOUBlE_CLICK_WAIT)) double_clicki (
-  .button(button), .single(wr_enable), .double(rd_enable),  .clk(clk), .rst_n(dbl_clck_rst_n)
+  .button(~button_n), .single(wr_enable), .double(rd_enable),  .clk(clk), .rst_n(dbl_clck_rst_n)
 );
 
 
