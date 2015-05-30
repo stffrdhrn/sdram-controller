@@ -67,7 +67,9 @@ always @ (posedge clk)
   led_cnt <= led_cnt + 1'b1;
    
 // when busy goes down, we need to read data on the next clk
-
+//  - busy_sr   - shift register to determine busy neg edge
+//  - read      - register to remember that we were reading
+//  - data_read - signal saying data should be on the bus (busy done + read)
 reg [1:0] busy_sr;
 reg       read;
 wire data_ready = (read & (busy_sr == 2'b10));
@@ -78,7 +80,7 @@ always @ (posedge clk)
    busy_sr <= 2'b00;
    read <= 1'b0;
    data_output_r <= 16'b0;
-   haddr <= {HADDR_WIDTH{1'b0}};
+   haddr <= {(HADDR_WIDTH/4){dip}};
    end
  else
    begin

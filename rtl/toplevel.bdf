@@ -137,7 +137,7 @@ agreement for further details.
 		(line (pt 82 8)(pt 78 12))
 		(line (pt 78 12)(pt 82 8))
 	)
-	(annotation_block (location)(rect 880 416 968 472))
+	(annotation_block (location)(rect 896 424 960 456))
 )
 (pin
 	(output)
@@ -154,7 +154,7 @@ agreement for further details.
 		(line (pt 82 8)(pt 78 12))
 		(line (pt 78 12)(pt 82 8))
 	)
-	(annotation_block (location)(rect 768 336 824 352))
+	(annotation_block (location)(rect 832 304 888 320))
 )
 (pin
 	(output)
@@ -188,7 +188,7 @@ agreement for further details.
 		(line (pt 82 8)(pt 78 12))
 		(line (pt 78 12)(pt 82 8))
 	)
-	(annotation_block (location)(rect 768 352 824 368))
+	(annotation_block (location)(rect 832 320 888 336))
 )
 (pin
 	(output)
@@ -205,7 +205,7 @@ agreement for further details.
 		(line (pt 82 8)(pt 78 12))
 		(line (pt 78 12)(pt 82 8))
 	)
-	(annotation_block (location)(rect 768 368 824 384))
+	(annotation_block (location)(rect 832 336 888 352))
 )
 (pin
 	(output)
@@ -222,7 +222,7 @@ agreement for further details.
 		(line (pt 82 8)(pt 78 12))
 		(line (pt 78 12)(pt 82 8))
 	)
-	(annotation_block (location)(rect 768 384 824 400))
+	(annotation_block (location)(rect 832 352 888 368))
 )
 (pin
 	(output)
@@ -239,7 +239,7 @@ agreement for further details.
 		(line (pt 82 8)(pt 78 12))
 		(line (pt 78 12)(pt 82 8))
 	)
-	(annotation_block (location)(rect 768 400 824 416))
+	(annotation_block (location)(rect 832 368 888 384))
 )
 (pin
 	(output)
@@ -256,7 +256,7 @@ agreement for further details.
 		(line (pt 82 8)(pt 78 12))
 		(line (pt 78 12)(pt 82 8))
 	)
-	(annotation_block (location)(rect 776 -24 864 88))
+	(annotation_block (location)(rect 848 -56 936 56))
 )
 (pin
 	(bidir)
@@ -274,7 +274,7 @@ agreement for further details.
 		(line (pt 52 8)(pt 56 12))
 	)
 	(text "VCC" (rect 4 7 24 16)(font "Arial" (font_size 6)))
-	(annotation_block (location)(rect 920 280 1008 408))
+	(annotation_block (location)(rect 920 288 1008 416))
 )
 (symbol
 	(rect 192 216 544 456)
@@ -449,7 +449,7 @@ agreement for further details.
 	(drawing
 		(rectangle (rect 16 16 336 224))
 	)
-	(annotation_block (parameter)(rect 608 120 822 228))
+	(annotation_block (parameter)(rect 608 64 822 172))
 )
 (symbol
 	(rect -136 360 104 504)
