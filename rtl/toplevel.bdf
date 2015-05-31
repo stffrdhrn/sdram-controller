@@ -277,6 +277,119 @@ agreement for further details.
 	(annotation_block (location)(rect 920 288 1008 416))
 )
 (symbol
+	(rect -136 48 0 128)
+	(text "pll_1m" (rect 5 0 36 10)(font "Arial" ))
+	(text "pll_1mi" (rect 8 64 42 74)(font "Arial" ))
+	(port
+		(pt 0 32)
+		(input)
+		(text "inclk0" (rect 0 0 28 10)(font "Arial" ))
+		(text "inclk0" (rect 21 27 49 37)(font "Arial" ))
+		(line (pt 0 32)(pt 16 32))
+	)
+	(port
+		(pt 136 32)
+		(output)
+		(text "c0" (rect 0 0 11 10)(font "Arial" ))
+		(text "c0" (rect 106 27 117 37)(font "Arial" ))
+		(line (pt 136 32)(pt 120 32))
+	)
+	(drawing
+		(rectangle (rect 16 16 120 64))
+	)
+)
+(symbol
+	(rect 192 -32 480 112)
+	(text "dnano_interface" (rect 5 0 84 10)(font "Arial" ))
+	(text "dnano_interfacei" (rect 8 128 89 138)(font "Arial" ))
+	(port
+		(pt 0 32)
+		(input)
+		(text "button_n" (rect 0 0 42 10)(font "Arial" ))
+		(text "button_n" (rect 21 27 63 37)(font "Arial" ))
+		(line (pt 0 32)(pt 16 32))
+	)
+	(port
+		(pt 0 48)
+		(input)
+		(text "dip[3..0]" (rect 0 0 40 10)(font "Arial" ))
+		(text "dip[3..0]" (rect 21 43 61 53)(font "Arial" ))
+		(line (pt 0 48)(pt 16 48)(line_width 3))
+	)
+	(port
+		(pt 0 64)
+		(input)
+		(text "data_output[15..0]" (rect 0 0 89 10)(font "Arial" ))
+		(text "data_output[15..0]" (rect 21 59 110 69)(font "Arial" ))
+		(line (pt 0 64)(pt 16 64)(line_width 3))
+	)
+	(port
+		(pt 0 80)
+		(input)
+		(text "busy" (rect 0 0 24 10)(font "Arial" ))
+		(text "busy" (rect 21 75 45 85)(font "Arial" ))
+		(line (pt 0 80)(pt 16 80))
+	)
+	(port
+		(pt 0 96)
+		(input)
+		(text "rst_n" (rect 0 0 24 10)(font "Arial" ))
+		(text "rst_n" (rect 21 91 45 101)(font "Arial" ))
+		(line (pt 0 96)(pt 16 96))
+	)
+	(port
+		(pt 0 112)
+		(input)
+		(text "clk" (rect 0 0 14 10)(font "Arial" ))
+		(text "clk" (rect 21 107 35 117)(font "Arial" ))
+		(line (pt 0 112)(pt 16 112))
+	)
+	(port
+		(pt 288 32)
+		(output)
+		(text "leds[7..0]" (rect 0 0 46 10)(font "Arial" ))
+		(text "leds[7..0]" (rect 229 27 275 37)(font "Arial" ))
+		(line (pt 288 32)(pt 272 32)(line_width 3))
+	)
+	(port
+		(pt 288 48)
+		(output)
+		(text "haddr[HADDR_WIDTH-1..0]" (rect 0 0 139 10)(font "Arial" ))
+		(text "haddr[HADDR_WIDTH-1..0]" (rect 150 43 289 53)(font "Arial" ))
+		(line (pt 288 48)(pt 272 48)(line_width 3))
+	)
+	(port
+		(pt 288 64)
+		(output)
+		(text "data_input[15..0]" (rect 0 0 82 10)(font "Arial" ))
+		(text "data_input[15..0]" (rect 198 59 280 69)(font "Arial" ))
+		(line (pt 288 64)(pt 272 64)(line_width 3))
+	)
+	(port
+		(pt 288 80)
+		(output)
+		(text "rd_enable" (rect 0 0 47 10)(font "Arial" ))
+		(text "rd_enable" (rect 228 75 275 85)(font "Arial" ))
+		(line (pt 288 80)(pt 272 80))
+	)
+	(port
+		(pt 288 96)
+		(output)
+		(text "wr_enable" (rect 0 0 48 10)(font "Arial" ))
+		(text "wr_enable" (rect 227 91 275 101)(font "Arial" ))
+		(line (pt 288 96)(pt 272 96))
+	)
+	(parameter
+		"HADDR_WIDTH"
+		"24"
+		""
+		(type "PARAMETER_SIGNED_DEC")	)
+	(drawing
+		(rectangle (rect 16 16 272 128))
+	)
+	(annotation_block (parameter)(rect 480 -56 680 -32))
+)
+(symbol
 	(rect 192 216 544 456)
 	(text "sdram_controller" (rect 5 0 86 10)(font "Arial" ))
 	(text "sdram_controlleri" (rect 8 224 91 234)(font "Arial" ))
@@ -433,7 +546,7 @@ agreement for further details.
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
 		"CLK_FREQUENCY"
-		"133"
+		"100"
 		""
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
@@ -452,57 +565,9 @@ agreement for further details.
 	(annotation_block (parameter)(rect 608 64 822 172))
 )
 (symbol
-	(rect -136 360 104 504)
-	(text "pll" (rect 114 0 129 15)(font "Arial" (font_size 10)))
-	(text "pll_133" (rect 8 130 42 140)(font "Arial" ))
-	(port
-		(pt 0 64)
-		(input)
-		(text "inclk0" (rect 0 0 31 12)(font "Arial" (font_size 8)))
-		(text "inclk0" (rect 4 52 35 64)(font "Arial" (font_size 8)))
-		(line (pt 0 64)(pt 40 64))
-	)
-	(port
-		(pt 240 64)
-		(output)
-		(text "c0" (rect 0 0 14 12)(font "Arial" (font_size 8)))
-		(text "c0" (rect 224 52 238 64)(font "Arial" (font_size 8)))
-	)
-	(drawing
-		(text "Cyclone IV E" (rect 164 131 230 141)(font "Arial" ))
-		(text "inclk0 frequency: 50.000 MHz" (rect 50 60 197 70)(font "Arial" ))
-		(text "Operation Mode: Normal" (rect 50 71 169 81)(font "Arial" ))
-		(text "Clk " (rect 51 89 71 99)(font "Arial" ))
-		(text "Ratio" (rect 75 89 100 99)(font "Arial" ))
-		(text "Ph (dg)" (rect 104 89 139 99)(font "Arial" ))
-		(text "DC (%)" (rect 138 89 174 99)(font "Arial" ))
-		(text "c0" (rect 54 101 65 111)(font "Arial" ))
-		(text "133/50" (rect 72 101 105 111)(font "Arial" ))
-		(text "0.00" (rect 110 101 131 111)(font "Arial" ))
-		(text "50.00" (rect 142 101 169 111)(font "Arial" ))
-		(line (pt 0 0)(pt 241 0))
-		(line (pt 241 0)(pt 241 145))
-		(line (pt 0 145)(pt 241 145))
-		(line (pt 0 0)(pt 0 145))
-		(line (pt 48 87)(pt 170 87))
-		(line (pt 48 98)(pt 170 98))
-		(line (pt 48 110)(pt 170 110))
-		(line (pt 48 87)(pt 48 110))
-		(line (pt 69 87)(pt 69 110)(line_width 3))
-		(line (pt 101 87)(pt 101 110)(line_width 3))
-		(line (pt 135 87)(pt 135 110)(line_width 3))
-		(line (pt 169 87)(pt 169 110))
-		(line (pt 40 48)(pt 207 48))
-		(line (pt 207 48)(pt 207 127))
-		(line (pt 40 127)(pt 207 127))
-		(line (pt 40 48)(pt 40 127))
-		(line (pt 239 64)(pt 207 64))
-	)
-)
-(symbol
-	(rect -136 48 0 128)
-	(text "pll_1m" (rect 5 0 36 10)(font "Arial" ))
-	(text "pll_1mi" (rect 8 64 42 74)(font "Arial" ))
+	(rect -136 392 0 472)
+	(text "pll_100m" (rect 5 0 48 10)(font "Arial" ))
+	(text "pll_100mi" (rect 8 64 54 74)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -521,190 +586,18 @@ agreement for further details.
 		(rectangle (rect 16 16 120 64))
 	)
 )
-(symbol
-	(rect 192 -32 480 112)
-	(text "dnano_interface" (rect 5 0 84 10)(font "Arial" ))
-	(text "dnano_interfacei" (rect 8 128 89 138)(font "Arial" ))
-	(port
-		(pt 0 32)
-		(input)
-		(text "button_n" (rect 0 0 42 10)(font "Arial" ))
-		(text "button_n" (rect 21 27 63 37)(font "Arial" ))
-		(line (pt 0 32)(pt 16 32))
-	)
-	(port
-		(pt 0 48)
-		(input)
-		(text "dip[3..0]" (rect 0 0 40 10)(font "Arial" ))
-		(text "dip[3..0]" (rect 21 43 61 53)(font "Arial" ))
-		(line (pt 0 48)(pt 16 48)(line_width 3))
-	)
-	(port
-		(pt 0 64)
-		(input)
-		(text "data_output[15..0]" (rect 0 0 89 10)(font "Arial" ))
-		(text "data_output[15..0]" (rect 21 59 110 69)(font "Arial" ))
-		(line (pt 0 64)(pt 16 64)(line_width 3))
-	)
-	(port
-		(pt 0 80)
-		(input)
-		(text "busy" (rect 0 0 24 10)(font "Arial" ))
-		(text "busy" (rect 21 75 45 85)(font "Arial" ))
-		(line (pt 0 80)(pt 16 80))
-	)
-	(port
-		(pt 0 96)
-		(input)
-		(text "rst_n" (rect 0 0 24 10)(font "Arial" ))
-		(text "rst_n" (rect 21 91 45 101)(font "Arial" ))
-		(line (pt 0 96)(pt 16 96))
-	)
-	(port
-		(pt 0 112)
-		(input)
-		(text "clk" (rect 0 0 14 10)(font "Arial" ))
-		(text "clk" (rect 21 107 35 117)(font "Arial" ))
-		(line (pt 0 112)(pt 16 112))
-	)
-	(port
-		(pt 288 32)
-		(output)
-		(text "leds[7..0]" (rect 0 0 46 10)(font "Arial" ))
-		(text "leds[7..0]" (rect 229 27 275 37)(font "Arial" ))
-		(line (pt 288 32)(pt 272 32)(line_width 3))
-	)
-	(port
-		(pt 288 48)
-		(output)
-		(text "haddr[HADDR_WIDTH-1..0]" (rect 0 0 139 10)(font "Arial" ))
-		(text "haddr[HADDR_WIDTH-1..0]" (rect 150 43 289 53)(font "Arial" ))
-		(line (pt 288 48)(pt 272 48)(line_width 3))
-	)
-	(port
-		(pt 288 64)
-		(output)
-		(text "data_input[15..0]" (rect 0 0 82 10)(font "Arial" ))
-		(text "data_input[15..0]" (rect 198 59 280 69)(font "Arial" ))
-		(line (pt 288 64)(pt 272 64)(line_width 3))
-	)
-	(port
-		(pt 288 80)
-		(output)
-		(text "rd_enable" (rect 0 0 47 10)(font "Arial" ))
-		(text "rd_enable" (rect 228 75 275 85)(font "Arial" ))
-		(line (pt 288 80)(pt 272 80))
-	)
-	(port
-		(pt 288 96)
-		(output)
-		(text "wr_enable" (rect 0 0 48 10)(font "Arial" ))
-		(text "wr_enable" (rect 227 91 275 101)(font "Arial" ))
-		(line (pt 288 96)(pt 272 96))
-	)
-	(parameter
-		"HADDR_WIDTH"
-		"24"
-		""
-		(type "PARAMETER_SIGNED_DEC")	)
-	(drawing
-		(rectangle (rect 16 16 272 128))
-	)
-	(annotation_block (parameter)(rect 480 -56 680 -32))
-)
 (connector
 	(pt 696 408)
 	(pt 640 408)
 	(bus)
 )
 (connector
-	(pt 104 424)
-	(pt 144 424)
-)
-(connector
 	(pt 144 472)
 	(pt 632 472)
 )
 (connector
-	(pt 592 296)
-	(pt 544 296)
-	(bus)
-)
-(connector
-	(text "DRAM_DQM[0]" (rect 554 400 629 410)(font "Arial" ))
-	(pt 544 408)
-	(pt 608 408)
-)
-(connector
-	(text "DRAM_DQM[1]" (rect 554 416 629 426)(font "Arial" ))
-	(pt 544 424)
-	(pt 608 424)
-)
-(connector
-	(pt 592 312)
-	(pt 544 312)
-	(bus)
-)
-(connector
-	(pt 592 328)
-	(pt 544 328)
-)
-(connector
-	(pt 592 344)
-	(pt 544 344)
-)
-(connector
-	(pt 592 360)
-	(pt 544 360)
-)
-(connector
-	(pt 592 376)
-	(pt 544 376)
-)
-(connector
-	(pt 592 392)
-	(pt 544 392)
-)
-(connector
-	(pt 144 328)
-	(pt 192 328)
-)
-(connector
-	(pt 144 328)
-	(pt 144 424)
-)
-(connector
-	(pt 144 424)
-	(pt 144 472)
-)
-(connector
-	(pt 544 280)
-	(pt 592 280)
-	(bus)
-)
-(connector
 	(pt 152 200)
 	(pt 576 200)
-	(bus)
-)
-(connector
-	(pt 576 200)
-	(pt 576 248)
-	(bus)
-)
-(connector
-	(pt 576 248)
-	(pt 544 248)
-	(bus)
-)
-(connector
-	(pt 88 168)
-	(pt 88 264)
-	(bus)
-)
-(connector
-	(pt 88 264)
-	(pt 192 264)
 	(bus)
 )
 (connector
@@ -715,22 +608,6 @@ agreement for further details.
 (connector
 	(pt 64 152)
 	(pt 520 152)
-)
-(connector
-	(pt 64 280)
-	(pt 64 152)
-)
-(connector
-	(pt 192 280)
-	(pt 64 280)
-)
-(connector
-	(pt 192 296)
-	(pt 48 296)
-)
-(connector
-	(pt 48 296)
-	(pt 48 136)
 )
 (connector
 	(pt 152 32)
@@ -788,16 +665,6 @@ agreement for further details.
 	(bus)
 )
 (connector
-	(pt 192 248)
-	(pt 104 248)
-	(bus)
-)
-(connector
-	(pt 104 248)
-	(pt 104 184)
-	(bus)
-)
-(connector
 	(pt 192 64)
 	(pt 120 64)
 )
@@ -816,14 +683,6 @@ agreement for further details.
 (connector
 	(pt 592 120)
 	(pt 176 120)
-)
-(connector
-	(pt 592 120)
-	(pt 592 264)
-)
-(connector
-	(pt 544 264)
-	(pt 592 264)
 )
 (connector
 	(pt -136 80)
@@ -846,14 +705,6 @@ agreement for further details.
 	(pt 192 80)
 )
 (connector
-	(pt 120 312)
-	(pt 192 312)
-)
-(connector
-	(pt -248 312)
-	(pt 120 312)
-)
-(connector
 	(pt 480 0)
 	(pt 600 0)
 	(bus)
@@ -866,6 +717,129 @@ agreement for further details.
 	(pt 192 16)
 	(pt -224 16)
 	(bus)
+)
+(connector
+	(pt 592 280)
+	(pt 544 280)
+	(bus)
+)
+(connector
+	(pt 592 296)
+	(pt 544 296)
+	(bus)
+)
+(connector
+	(text "DRAM_DQM[0]" (rect 554 400 629 410)(font "Arial" ))
+	(pt 544 408)
+	(pt 608 408)
+)
+(connector
+	(text "DRAM_DQM[1]" (rect 554 416 629 426)(font "Arial" ))
+	(pt 544 424)
+	(pt 608 424)
+)
+(connector
+	(pt 592 312)
+	(pt 544 312)
+	(bus)
+)
+(connector
+	(pt 592 328)
+	(pt 544 328)
+)
+(connector
+	(pt 592 344)
+	(pt 544 344)
+)
+(connector
+	(pt 592 360)
+	(pt 544 360)
+)
+(connector
+	(pt 592 376)
+	(pt 544 376)
+)
+(connector
+	(pt 592 392)
+	(pt 544 392)
+)
+(connector
+	(pt 144 328)
+	(pt 192 328)
+)
+(connector
+	(pt 576 200)
+	(pt 576 248)
+	(bus)
+)
+(connector
+	(pt 576 248)
+	(pt 544 248)
+	(bus)
+)
+(connector
+	(pt 88 168)
+	(pt 88 264)
+	(bus)
+)
+(connector
+	(pt 88 264)
+	(pt 192 264)
+	(bus)
+)
+(connector
+	(pt 64 152)
+	(pt 64 280)
+)
+(connector
+	(pt 64 280)
+	(pt 192 280)
+)
+(connector
+	(pt 48 296)
+	(pt 192 296)
+)
+(connector
+	(pt 48 136)
+	(pt 48 296)
+)
+(connector
+	(pt 104 248)
+	(pt 192 248)
+	(bus)
+)
+(connector
+	(pt 104 184)
+	(pt 104 248)
+	(bus)
+)
+(connector
+	(pt 592 120)
+	(pt 592 264)
+)
+(connector
+	(pt 592 264)
+	(pt 544 264)
+)
+(connector
+	(pt 144 328)
+	(pt 144 424)
+)
+(connector
+	(pt 144 424)
+	(pt 144 472)
+)
+(connector
+	(pt -248 312)
+	(pt 120 312)
+)
+(connector
+	(pt 120 312)
+	(pt 192 312)
+)
+(connector
+	(pt 0 424)
+	(pt 144 424)
 )
 (junction (pt 144 424))
 (junction (pt 120 312))
