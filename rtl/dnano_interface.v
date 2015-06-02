@@ -17,8 +17,10 @@ module dnano_interface (
 
 parameter HADDR_WIDTH = 24;
 
-// @ 1mhz 19bit is about 1/2 second
-localparam DOUBlE_CLICK_WAIT = 19;
+// @ 1mhz    19bit (512K) is about 1/2 second
+// @ 100mhz  26bit (64M)  is about 1/2 second
+localparam DOUBlE_CLICK_WAIT = 26;
+localparam LED_BLINK = 27;
  
 input        button_n;
 input  [3:0] dip;
@@ -37,14 +39,11 @@ input                      clk;
 reg   [HADDR_WIDTH-1:0]   haddr;
 wire  [15:0]              data_input;
 reg   [15:0]              data_output_r;
-reg   [20:0]              led_cnt;
+reg   [LED_BLINK-1:0]     led_cnt;
 wire  [7:0]               leds;
 wire                      wr_enable;
 
 wire  dbl_clck_rst_n;
-reg   [19:0] dbl_click_cnt;
-reg   [2:0] click_cnt;
-
 
 // When to reset the double click output
 // busy | rst_n
@@ -57,12 +56,12 @@ assign dbl_clck_rst_n = rst_n & ~busy;
 // expand the dip data from 4 to 16 bits
 assign data_input = {dip, dip, ~dip, ~dip};
 // toggle leds between sdram msb and lsb
-assign leds = led_cnt[20] ? data_output_r[15:8] : data_output_r[7:0]; 
+assign leds = led_cnt[LED_BLINK-1] ? data_output_r[15:8] : data_output_r[7:0]; 
 
 // handle led counter should just loop every half second
 always @ (posedge clk) 
  if (~rst_n) 
-  led_cnt <= 21'd0;
+  led_cnt <= {LED_BLINK{1'b0}};
  else
   led_cnt <= led_cnt + 1'b1;
    

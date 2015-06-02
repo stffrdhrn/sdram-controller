@@ -277,28 +277,6 @@ agreement for further details.
 	(annotation_block (location)(rect 920 288 1008 416))
 )
 (symbol
-	(rect -136 48 0 128)
-	(text "pll_1m" (rect 5 0 36 10)(font "Arial" ))
-	(text "pll_1mi" (rect 8 64 42 74)(font "Arial" ))
-	(port
-		(pt 0 32)
-		(input)
-		(text "inclk0" (rect 0 0 28 10)(font "Arial" ))
-		(text "inclk0" (rect 21 27 49 37)(font "Arial" ))
-		(line (pt 0 32)(pt 16 32))
-	)
-	(port
-		(pt 136 32)
-		(output)
-		(text "c0" (rect 0 0 11 10)(font "Arial" ))
-		(text "c0" (rect 106 27 117 37)(font "Arial" ))
-		(line (pt 136 32)(pt 120 32))
-	)
-	(drawing
-		(rectangle (rect 16 16 120 64))
-	)
-)
-(symbol
 	(rect 192 -32 480 112)
 	(text "dnano_interface" (rect 5 0 84 10)(font "Arial" ))
 	(text "dnano_interfacei" (rect 8 128 89 138)(font "Arial" ))
@@ -685,26 +663,6 @@ agreement for further details.
 	(pt 176 120)
 )
 (connector
-	(pt -136 80)
-	(pt -176 80)
-)
-(connector
-	(pt -176 80)
-	(pt -176 424)
-)
-(connector
-	(pt -240 424)
-	(pt -176 424)
-)
-(connector
-	(pt -176 424)
-	(pt -136 424)
-)
-(connector
-	(pt 0 80)
-	(pt 192 80)
-)
-(connector
 	(pt 480 0)
 	(pt 600 0)
 	(bus)
@@ -838,9 +796,25 @@ agreement for further details.
 	(pt 192 312)
 )
 (connector
+	(pt -240 424)
+	(pt -136 424)
+)
+(connector
+	(pt 32 80)
+	(pt 192 80)
+)
+(connector
+	(pt 32 80)
+	(pt 32 424)
+)
+(connector
 	(pt 0 424)
+	(pt 32 424)
+)
+(connector
+	(pt 32 424)
 	(pt 144 424)
 )
 (junction (pt 144 424))
 (junction (pt 120 312))
-(junction (pt -176 424))
+(junction (pt 32 424))
