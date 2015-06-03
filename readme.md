@@ -43,18 +43,32 @@ From the above diagram most signals should be pretty much self explainatory. Her
 # Initialization
 ![wave init](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-init.png)
 
-Initialization process showing refresh cycles and mode programming. 
+Initialization process showing:
+ - Precharge all banks
+ - 2 refresh cycles
+ - Mode programming
 
 # Refresh
 ![wave refresh](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-refresh.png)
 
-Refresh process
+Refresh process showing:
+ - Precharge all banks
+ - Single Refresh 
 
 # Writes
 ![wave write](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-write.png)
 
+Write operation showing:
+ - Bank Activation & Row Address Strobe
+ - Column Address Strobe with Auto Precharge set and Data on bus
+
 # Reads
 ![wave read](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-read.png)
+
+Read operation showing:
+ - Bank Activation & Row Address Strobe
+ - Column Address Strobe with Auto Precharge set
+ - Data on bus
 
 
 ## Test Application
