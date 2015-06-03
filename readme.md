@@ -1,12 +1,10 @@
 # _SDRAM Memory Controller_
 
-`Work in progress.` 
-
-Theory is to get a simple controller to work on the De0 Nano
+This is a very a simple sdram controller which work on the De0 Nano. The project
+also contains a simple push button interface for testing on the dev board.
 
 Basic features
- - ~50 LEs
- - Operates at 133Mhz, CAS 3, 32MB, 16-bit data
+ - Operates at 100Mhz, CAS 3, 32MB, 16-bit data
  - On reset will go into `INIT` sequnce
  - After `INIT` the controller sits in `IDLE` waiting for `REFRESH`, `READ` or `WRITE` 
  - `REFRESH` operations are spaced evenly 8192 times every 32ms
@@ -40,13 +38,19 @@ From the above diagram most signals should be pretty much self explainatory. Her
  - `busy` will go high when the read or write command is acknowledged. `busy` will go low when the write or read operation is complete.  In the case of read data should be on the bus for the next posedge.
  - **NOTE** For single reads and writes `wr_enable` and `rd_enable` should be set low once `busy` is observed.  This will protect from the controller thinking another request is needed. 
 
+## Timings
+
+## Test Application
+
+![Test Application](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/block.png)
+
 ## Project Status/TODO
  - [x] Compiles
  - [x] Simulated `Init`
  - [x] Simulated `Refresh`
  - [x] Simulated `Read`
  - [x] Simulated `Write`
- - [ ] Confirmed in De0 Nano
+ - [x] Confirmed in De0 Nano
 
 
 ## Project Setup
