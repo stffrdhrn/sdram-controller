@@ -40,9 +40,42 @@ From the above diagram most signals should be pretty much self explainatory. Her
 
 ## Timings
 
+# Initialization
+![wave init](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-init.png)
+
+Initialization process showing refresh cycles and mode programming. 
+
+# Refresh
+![wave refresh](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-refresh.png)
+
+Refresh process
+
+# Writes
+![wave write](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-write.png)
+
+# Reads
+![wave read](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/wave-read.png)
+
+
 ## Test Application
 
 ![Test Application](https://raw.githubusercontent.com/stffrdhrn/sdram-controller/master/readme/block.png)
+*Figure - test application block diagram*
+
+The test application provides a simple user interface for testing the functionality
+of the sdram controller. 
+
+Basics:
+ - The clock input should be 50Mhz (a pll multiplies it up to 100Mhz)
+ - One push button is used for `reset`
+ - A Second push button is used for `read` and `write`
+   - single click for `write`
+   - double click for `read`
+ - A 4-bit dip switch is used for inputting addresses and data 
+   - Upon `reset` the read/write addresses are read from the dip switch
+   - When `writing` the dip switch is data is written to the sdram
+   - Address and data busses are greather than 4 bits, data is duplicated to fill the bus 
+ - 8 LEDs are used to display the data read from the sdram. The data but is 16-bits, high and low bytes are alternated on the LEDs about every half second. 
 
 ## Project Status/TODO
  - [x] Compiles
