@@ -1,6 +1,6 @@
 # _SDRAM Memory Controller_
 
-This is a very a simple sdram controller which work on the De0 Nano. The project
+This is a very a simple sdram controller which works on the De0 Nano. The project
 also contains a simple push button interface for testing on the dev board.
 
 Basic features
@@ -108,5 +108,5 @@ BSD
 
 ## Further Reading
 I didn't look at these when designing my controller.  But it might be good to take a look at for ideas. 
- - http://hamsterworks.co.nz/mediawiki/index.php/Simple_SDRAM_Controller - featured on hack-a-day
- - http://ladybug.xs4all.nl/arlet/fpga/source/sdram.v - comment saying this is another implementation
+ - http://hamsterworks.co.nz/mediawiki/index.php/Simple_SDRAM_Controller - featured on hackaday
+ - http://ladybug.xs4all.nl/arlet/fpga/source/sdram.v - Arlet's implementation fro a comment on the hackaday article
