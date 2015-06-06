@@ -292,7 +292,7 @@ begin
         else if (wr_enable_r)
           begin
           next = WRIT_ACT;
-          command_nxt <= CMD_BACT;
+          command_nxt = CMD_BACT;
           end
         else 
           begin
