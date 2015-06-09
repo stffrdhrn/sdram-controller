@@ -112,8 +112,6 @@ reg  [HADDR_WIDTH-1:0]   haddr_r;
 reg  [15:0]              data_input_r;
 reg  [15:0]              data_output_r;
 reg                      busy_r;
-reg                      wr_enable_r;
-reg                      rd_enable_r;
 reg                      data_mask_low_r;
 reg                      data_mask_high_r;
 reg [SDRADDR_WIDTH-1:0]  addr_r;
@@ -154,19 +152,25 @@ assign data = (state == WRIT_CAS) ? data_input_r : 16'bz;
 always @ (posedge clk)
   if (~rst_n)
     begin
+    state <= INIT_NOP1;
+    command <= CMD_NOP;
+    state_cnt <= 4'hf;
+    
     haddr_r <= {HADDR_WIDTH{1'b0}};
     data_input_r <= 16'b0;
     data_output_r <= 16'b0;
     busy_r <= 1'b0;
-    wr_enable_r <= 1'b0;
-    rd_enable_r <= 1'b0;
     end
   else 
     begin
     
-    /* These are used for controlling/syncing negedge state transaciton */
-    wr_enable_r <= wr_enable;
-    rd_enable_r <= rd_enable;
+    state <= next;
+    command <= command_nxt;
+    
+    if (!state_cnt)
+      state_cnt <= state_cnt_nxt;
+    else
+      state_cnt <= state_cnt - 1'b1;
     
     if (wr_enable)
       data_input_r <= data_input;
@@ -187,37 +191,20 @@ always @ (posedge clk)
       haddr_r <= haddr;
     else 
       haddr_r <= haddr_r;
-      
+          
     end
 
-// SDRAM INTERFACE all transition on negedge
-// this allows them to be clocked by the sdram on
-// its posedge
-//   state counter 
-//   state changes
-//   and command output
-always @ (negedge clk)
-  if (~rst_n)
-    begin
-    state <= INIT_NOP1;
-    command <= CMD_NOP;
-    state_cnt <= 4'hf;
-    end
-  else 
-    begin
-    state <= next;
-    command <= command_nxt;
+// Handle refresh counter
+always @ (posedge clk) 
+ if (~rst_n) 
+   refresh_cnt <= 10'b0;
+ else
+   if (state == REF_NOP2)
+     refresh_cnt <= 10'b0;
+   else 
+     refresh_cnt <= refresh_cnt + 1'b1;
+
     
-    if (!state_cnt)
-      begin
-      state_cnt <= state_cnt_nxt;
-      end
-    else
-      begin
-      state_cnt <= state_cnt - 1'b1;
-      end
-    end
-
 /* Handle logic for sending addresses to SDRAM based on current state*/
 always @*
 begin
@@ -262,16 +249,6 @@ begin
      end
 end
     
-// Handle refresh counter
-always @ (posedge clk) 
- if (~rst_n) 
-   refresh_cnt <= 10'b0;
- else
-   if (state == REF_NOP2)
-     refresh_cnt <= 10'b0;
-   else 
-     refresh_cnt <= refresh_cnt + 1'b1;
-
 // Next state logic
 always @* 
 begin
@@ -284,12 +261,12 @@ begin
           next = REF_PRE;
           command_nxt = CMD_PALL;
           end
-        else if (rd_enable_r)
+        else if (rd_enable)
           begin
           next = READ_ACT;
           command_nxt = CMD_BACT;
           end
-        else if (wr_enable_r)
+        else if (wr_enable)
           begin
           next = WRIT_ACT;
           command_nxt = CMD_BACT;
@@ -413,6 +390,5 @@ begin
         command_nxt = command;
         end
 end
-
 
 endmodule
