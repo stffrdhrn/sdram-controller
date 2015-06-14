@@ -564,6 +564,28 @@ agreement for further details.
 		(rectangle (rect 16 16 120 64))
 	)
 )
+(symbol
+	(rect -112 48 24 128)
+	(text "pll_1m" (rect 5 0 36 10)(font "Arial" ))
+	(text "pll_1mi" (rect 8 64 42 74)(font "Arial" ))
+	(port
+		(pt 0 32)
+		(input)
+		(text "inclk0" (rect 0 0 28 10)(font "Arial" ))
+		(text "inclk0" (rect 21 27 49 37)(font "Arial" ))
+		(line (pt 0 32)(pt 16 32))
+	)
+	(port
+		(pt 136 32)
+		(output)
+		(text "c0" (rect 0 0 11 10)(font "Arial" ))
+		(text "c0" (rect 106 27 117 37)(font "Arial" ))
+		(line (pt 136 32)(pt 120 32))
+	)
+	(drawing
+		(rectangle (rect 16 16 120 64))
+	)
+)
 (connector
 	(pt 696 408)
 	(pt 640 408)
@@ -796,25 +818,29 @@ agreement for further details.
 	(pt 192 312)
 )
 (connector
-	(pt -240 424)
-	(pt -136 424)
-)
-(connector
-	(pt 32 80)
-	(pt 192 80)
-)
-(connector
-	(pt 32 80)
-	(pt 32 424)
-)
-(connector
 	(pt 0 424)
-	(pt 32 424)
+	(pt 144 424)
 )
 (connector
-	(pt 32 424)
-	(pt 144 424)
+	(pt 192 80)
+	(pt 24 80)
+)
+(connector
+	(pt -112 80)
+	(pt -168 80)
+)
+(connector
+	(pt -168 80)
+	(pt -168 424)
+)
+(connector
+	(pt -240 424)
+	(pt -168 424)
+)
+(connector
+	(pt -168 424)
+	(pt -136 424)
 )
 (junction (pt 144 424))
 (junction (pt 120 312))
-(junction (pt 32 424))
+(junction (pt -168 424))

@@ -19,8 +19,8 @@ parameter HADDR_WIDTH = 24;
 
 // @ 1mhz    19bit (512K) is about 1/2 second
 // @ 100mhz  26bit (64M)  is about 1/2 second
-localparam DOUBlE_CLICK_WAIT = 26;
-localparam LED_BLINK = 27;
+localparam DOUBlE_CLICK_WAIT = 19;
+localparam LED_BLINK = 20;
  
 input        button_n;
 input  [3:0] dip;
@@ -46,6 +46,7 @@ wire                      wr_enable;
 wire  dbl_clck_rst_n;
 
 // When to reset the double click output
+// we want to reset after we know the sdram is busy
 // busy | rst_n
 //  0      0     - reset is on  (be-low )
 //  0      1     - reset is off (be high)

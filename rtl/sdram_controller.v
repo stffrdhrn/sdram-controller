@@ -21,7 +21,7 @@
 
 module sdram_controller (
     /* HOST INTERFACE */
-    haddr, data_input, data_output, busy, rd_enable, wr_enable, rst_n, clk,
+    haddr, data_input, data_output, busy, rd_ready, rd_enable, wr_enable, rst_n, clk,
 
     /* SDRAM SIDE */
     addr, bank_addr, data, clock_enable, cs_n, ras_n, cas_n, we_n, data_mask_low, data_mask_high
@@ -89,6 +89,7 @@ input  [HADDR_WIDTH-1:0]   haddr;
 input  [15:0]              data_input;
 output [15:0]              data_output;
 output                     busy;
+output                     rd_ready;
 input                      rd_enable;
 input                      wr_enable;
 input                      rst_n;
@@ -146,6 +147,7 @@ assign bank_addr[1:0] = (state[4]) ? bank_addr_r : command[2:1];
 assign addr           = (state[4] | state == INIT_LOAD) ? addr_r : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
                         
 assign data = (state == WRIT_CAS) ? data_input_r : 16'bz;
+assign rd_ready = (state == READ_READ) ? 1'b1 : 1'b0;
 
 // HOST INTERFACE
 // all registered on posedge
