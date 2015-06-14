@@ -45,7 +45,7 @@ assign full_nxt = wr | full_r;
 // high for a long time. We dont want to get writes
 // during this time so consider the queue still 
 // full. 
-assign full = rd | full_r;  // <<<<<< READ is Clock Domain Cross 
+assign full = rd_syn2 | full_r;  // <<<<<< READ is Clock Domain Cross 
 
 always @ (posedge clkout)
   if (~rst_n)
