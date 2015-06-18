@@ -1026,10 +1026,6 @@ agreement for further details.
 	(bus)
 )
 (connector
-	(pt 808 464)
-	(pt 440 464)
-)
-(connector
 	(pt 440 312)
 	(pt 440 464)
 )
@@ -1188,10 +1184,6 @@ agreement for further details.
 	(pt 792 480)
 )
 (connector
-	(pt 808 384)
-	(pt 760 384)
-)
-(connector
 	(pt 760 312)
 	(pt 872 312)
 	(bus)
@@ -1225,24 +1217,6 @@ agreement for further details.
 	(pt 936 24)
 )
 (connector
-	(pt 760 176)
-	(pt 808 176)
-	(bus)
-)
-(connector
-	(pt 808 176)
-	(pt 848 176)
-	(bus)
-)
-(connector
-	(pt 808 176)
-	(pt 808 384)
-)
-(connector
-	(pt 808 384)
-	(pt 808 464)
-)
-(connector
 	(text "DRAM_DQM[0]" (rect 1418 152 1493 162)(font "Arial" ))
 	(pt 1320 160)
 	(pt 1472 160)
@@ -1255,11 +1229,6 @@ agreement for further details.
 (connector
 	(pt 872 56)
 	(pt 960 56)
-	(bus)
-)
-(connector
-	(pt 848 40)
-	(pt 960 40)
 	(bus)
 )
 (connector
@@ -1316,21 +1285,12 @@ agreement for further details.
 	(pt 960 16)
 )
 (connector
-	(pt 848 176)
-	(pt 960 176)
-)
-(connector
 	(pt 920 8)
 	(pt 920 136)
 )
 (connector
 	(pt 920 136)
 	(pt 920 192)
-)
-(connector
-	(pt 848 40)
-	(pt 848 176)
-	(bus)
 )
 (connector
 	(text "DRAM_DQM[1..0]" (rect 1504 160 1592 170)(font "Arial" ))
@@ -1373,6 +1333,41 @@ agreement for further details.
 	(pt 1456 32)
 	(bus)
 )
+(connector
+	(pt 960 40)
+	(pt 808 40)
+	(bus)
+)
+(connector
+	(pt 808 40)
+	(pt 808 176)
+	(bus)
+)
+(connector
+	(pt 760 176)
+	(pt 808 176)
+	(bus)
+)
+(connector
+	(pt 824 176)
+	(pt 960 176)
+)
+(connector
+	(pt 440 464)
+	(pt 824 464)
+)
+(connector
+	(pt 760 384)
+	(pt 824 384)
+)
+(connector
+	(pt 824 176)
+	(pt 824 384)
+)
+(connector
+	(pt 824 384)
+	(pt 824 464)
+)
 (junction (pt -168 424))
 (junction (pt -216 0))
 (junction (pt -216 16))
@@ -1386,8 +1381,6 @@ agreement for further details.
 (junction (pt 792 408))
 (junction (pt 792 248))
 (junction (pt 792 224))
-(junction (pt 808 384))
 (junction (pt 792 208))
-(junction (pt 808 176))
 (junction (pt 920 136))
-(junction (pt 848 176))
+(junction (pt 824 384))
