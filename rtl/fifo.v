@@ -11,7 +11,7 @@ module fifo (
   datain, dataout,
   clkin, clkout,
   wr, rd,
-  full, empty,
+  full, empty_n,
   rst_n
 );
 
@@ -25,13 +25,13 @@ input                  rd;
 input                  rst_n;
 
 output [BUS_WIDTH-1:0] dataout; 
-output                 full;    // Low-Means in side can write
-output                 empty;   // Low-Means out side can read
+output                 full;      // Low-Means in side can write
+output                 empty_n;   // High-Means out side can read
 
 
 reg [BUS_WIDTH-1:0]    datain_r;
 reg [BUS_WIDTH-1:0]    dataout;
-reg                    empty;
+reg                    empty_n;
 
 reg                    rd_syn1, rd_syn2;     // Always need 2 synchro flops 
 reg                    full_syn1, full_syn2;
@@ -51,7 +51,7 @@ always @ (posedge clkout)
   if (~rst_n)
     begin
     dataout <= {BUS_WIDTH{1'b0}};
-    empty <= 1'b1;
+    empty_n <= 1'b0;
     {full_syn2, full_syn1} <= 2'b00;
     end
   else
@@ -60,12 +60,12 @@ always @ (posedge clkout)
     
     if (full_syn2)
       begin
-      empty <= 1'b0;
+      empty_n <= 1'b1;
       dataout <= datain_r;
       end
     else 
       begin
-      empty <= 1'b1;
+      empty_n <= 1'b0;
       dataout <= dataout;
       end
       
