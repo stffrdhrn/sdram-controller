@@ -1,7 +1,6 @@
 # _SDRAM Memory Controller_
 
-`CURRENT STATUS : instable, working on integrating with multi clock domain and building
-fifo for clock domain crossing`
+`CURRENT STATUS : stable`
 
 This is a very a simple sdram controller which works on the De0 Nano. The project
 also contains a simple push button interface for testing on the dev board.
