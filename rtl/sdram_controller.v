@@ -21,7 +21,16 @@
 
 module sdram_controller (
     /* HOST INTERFACE */
-    haddr, data_input, data_output, busy, rd_ready, rd_enable, wr_enable, rst_n, clk,
+    wr_addr,
+    wr_data,
+    wr_enable, 
+
+    rd_addr, 
+    rd_data,
+    rd_ready,
+    rd_enable,
+    
+    busy, rst_n, clk,
 
     /* SDRAM SIDE */
     addr, bank_addr, data, clock_enable, cs_n, ras_n, cas_n, we_n, data_mask_low, data_mask_high
@@ -85,13 +94,16 @@ localparam CMD_PALL = 8'b10010001,
 
 /* Interface Definition */
 /* HOST INTERFACE */
-input  [HADDR_WIDTH-1:0]   haddr;
-input  [15:0]              data_input;
-output [15:0]              data_output;
-output                     busy;
-output                     rd_ready;
-input                      rd_enable;
+input  [HADDR_WIDTH-1:0]   wr_addr;
+input  [15:0]              wr_data;
 input                      wr_enable;
+
+input  [HADDR_WIDTH-1:0]   rd_addr;
+output [15:0]              rd_data;
+input                      rd_enable;
+output                     rd_ready;
+
+output                     busy;
 input                      rst_n;
 input                      clk;
 
@@ -110,8 +122,8 @@ output                     data_mask_high;
 /* I/O Registers */
 
 reg  [HADDR_WIDTH-1:0]   haddr_r;
-reg  [15:0]              data_input_r;
-reg  [15:0]              data_output_r;
+reg  [15:0]              wr_data_r;
+reg  [15:0]              rd_data_r;
 reg                      busy_r;
 reg                      data_mask_low_r;
 reg                      data_mask_high_r;
@@ -125,7 +137,7 @@ wire                     data_mask_low, data_mask_high;
 
 assign data_mask_high = data_mask_high_r;
 assign data_mask_low  = data_mask_low_r;
-assign data_output    = data_output_r;
+assign rd_data        = rd_data_r;
 assign busy           = busy_r;
 
 /* Internal Wiring */
@@ -146,7 +158,7 @@ assign {clock_enable, cs_n, ras_n, cas_n, we_n} = command[7:3];
 assign bank_addr[1:0] = (state[4]) ? bank_addr_r : command[2:1];
 assign addr           = (state[4] | state == INIT_LOAD) ? addr_r : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
                         
-assign data = (state == WRIT_CAS) ? data_input_r : 16'bz;
+assign data = (state == WRIT_CAS) ? wr_data_r : 16'bz;
 assign rd_ready = (state == READ_READ) ? 1'b1 : 1'b0;
 
 // HOST INTERFACE
@@ -159,8 +171,8 @@ always @ (posedge clk)
     state_cnt <= 4'hf;
     
     haddr_r <= {HADDR_WIDTH{1'b0}};
-    data_input_r <= 16'b0;
-    data_output_r <= 16'b0;
+    wr_data_r <= 16'b0;
+    rd_data_r <= 16'b0;
     busy_r <= 1'b0;
     end
   else 
@@ -175,22 +187,24 @@ always @ (posedge clk)
       state_cnt <= state_cnt - 1'b1;
     
     if (wr_enable)
-      data_input_r <= data_input;
+      wr_data_r <= wr_data;
     else 
-      data_input_r <= data_input_r;
+      wr_data_r <= wr_data_r;
     
     if (state == READ_READ)
-      data_output_r <= data;
+      rd_data_r <= data;
     else
-      data_output_r <= data_output_r;
+      rd_data_r <= rd_data_r;
     
     if (state[4]) 
       busy_r <= 1'b1;
     else
       busy_r <= 1'b0;
       
-    if (rd_enable | wr_enable)
-      haddr_r <= haddr;
+    if (rd_enable)
+      haddr_r <= rd_addr;
+    else if (wr_enable)
+      haddr_r <= wr_addr;
     else 
       haddr_r <= haddr_r;
           

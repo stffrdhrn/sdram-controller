@@ -8,7 +8,17 @@ module dnano_interface (
   button_n, dip, leds,
 
   /* Controller Interface */
-  haddr, data_input, data_output, busy, rd_enable, wr_enable, 
+  haddr,     // RW-FIFO- data1
+  busy,      // RW-FIFO- full
+  
+  wr_enable, // WR-FIFO- write
+  wr_data,   // WR-FIFO- data2
+  
+  rd_enable,  //RO-FIFO- write
+  
+  rd_data,    //RI-FIFO- data
+  rd_rdy,    // RI-FIFO-~empty
+  rd_ack,    // RI-FIFO- read
 
   /* basics */
   rst_n, clk
@@ -27,21 +37,23 @@ input  [3:0] dip;
 output [7:0] leds;
 
 output [HADDR_WIDTH-1:0]   haddr;
-output [15:0]              data_input;
-input  [15:0]              data_output;
+output [15:0]              wr_data;
+input  [15:0]              rd_data;
 input                      busy;
 output                     rd_enable;
+input                      rd_rdy;
+output                     rd_ack;
 output                     wr_enable;
 
 input                      rst_n;
 input                      clk;
 
-reg   [HADDR_WIDTH-1:0]   haddr;
-wire  [15:0]              data_input;
-reg   [15:0]              data_output_r;
+wire  [15:0]              wr_data;
+reg   [15:0]              rd_data_r;
 reg   [LED_BLINK-1:0]     led_cnt;
 wire  [7:0]               leds;
 wire                      wr_enable;
+reg                       rd_ack_r;
 
 wire  dbl_clck_rst_n;
 
@@ -55,9 +67,12 @@ wire  dbl_clck_rst_n;
 assign dbl_clck_rst_n = rst_n & ~busy;
 
 // expand the dip data from 4 to 16 bits
-assign data_input = {dip, dip, ~dip, ~dip};
+assign wr_data = {dip, dip, ~dip, ~dip};
 // toggle leds between sdram msb and lsb
-assign leds = led_cnt[LED_BLINK-1] ? data_output_r[15:8] : data_output_r[7:0]; 
+assign leds = led_cnt[LED_BLINK-1] ? rd_data_r[15:8] : rd_data_r[7:0]; 
+
+assign haddr  = {(HADDR_WIDTH/4){dip}};
+assign rd_ack = rd_ack_r;
 
 // handle led counter should just loop every half second
 always @ (posedge clk) 
@@ -66,39 +81,21 @@ always @ (posedge clk)
  else
   led_cnt <= led_cnt + 1'b1;
    
-// when busy goes down, we need to read data on the next clk
-//  - busy_sr   - shift register to determine busy neg edge
-//  - read      - register to remember that we were reading
-//  - data_read - signal saying data should be on the bus (busy done + read)
-reg [1:0] busy_sr;
-reg       read;
-wire data_ready = (read & (busy_sr == 2'b10));
 
 always @ (posedge clk)
  if (~rst_n)
    begin
-   busy_sr <= 2'b00;
-   read <= 1'b0;
-   data_output_r <= 16'b0;
-   haddr <= {(HADDR_WIDTH/4){dip}};
+   rd_data_r <= 16'b0;
+   rd_ack_r <= 1'b0;
    end
  else
-   begin
-   haddr <= haddr;
-   if (rd_enable)
-     read <= 1'b1;
-   else if (data_ready)
-     read <= 1'b0;
-   else
-     read <= read;
-     
-   busy_sr <= {busy_sr[0], busy};
+   begin   
+   rd_ack_r <= rd_rdy;
    
-   if (data_ready)
-     data_output_r <= data_output;
+   if (rd_rdy)
+     rd_data_r <= rd_data;
    else 
-     data_output_r <= data_output_r;
-     
+     rd_data_r <= rd_data_r;
    end
    
 double_click #(.WAIT_WIDTH(DOUBlE_CLICK_WAIT)) double_clicki (

@@ -1,0 +1,99 @@
+/*
+WARNING: Do NOT edit the input and output ports in this file in a text
+editor if you plan to continue editing the block that represents it in
+the Block Editor! File corruption is VERY likely to occur.
+*/
+/*
+Copyright (C) 1991-2014 Altera Corporation. All rights reserved.
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and its AMPP partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, the Altera Quartus II License Agreement,
+the Altera MegaCore Function License Agreement, or other 
+applicable license agreement, including, without limitation, 
+that your use is for the sole purpose of programming logic 
+devices manufactured by Altera and sold by Altera or its 
+authorized distributors.  Please refer to the applicable 
+agreement for further details.
+*/
+(header "symbol" (version "1.2"))
+(symbol
+	(rect 64 64 248 216)
+	(text "fifo" (rect 5 0 22 10)(font "Arial" ))
+	(text "inst" (rect 8 128 25 138)(font "Arial" ))
+	(port
+		(pt 0 16)
+		(input)
+		(text "datain[BUS_WIDTH-1..0]" (rect 0 0 123 10)(font "Arial" ))
+		(text "datain[BUS_WIDTH-1..0]" (rect 24 16 147 26)(font "Arial" ))
+		(line (pt 0 16)(pt 16 16)(line_width 3))
+	)
+	(port
+		(pt 0 112)
+		(input)
+		(text "clkin" (rect 0 0 22 10)(font "Arial" ))
+		(text "clkin" (rect 21 107 43 117)(font "Arial" ))
+		(line (pt 0 112)(pt 16 112))
+	)
+	(port
+		(pt 184 112)
+		(input)
+		(text "clkout" (rect 0 0 29 10)(font "Arial" ))
+		(text "clkout" (rect 130 104 159 114)(font "Arial" ))
+		(line (pt 168 112)(pt 184 112))
+	)
+	(port
+		(pt 0 48)
+		(input)
+		(text "wr" (rect 0 0 10 10)(font "Arial" ))
+		(text "wr" (rect 24 40 34 50)(font "Arial" ))
+		(line (pt 0 48)(pt 16 48))
+	)
+	(port
+		(pt 184 56)
+		(input)
+		(text "rd" (rect -128 0 -119 10)(font "Arial" ))
+		(text "rd" (rect 144 48 153 58)(font "Arial" ))
+		(line (pt 168 56)(pt 184 56))
+	)
+	(port
+		(pt 0 88)
+		(input)
+		(text "rst_n" (rect 0 0 24 10)(font "Arial" ))
+		(text "rst_n" (rect 21 83 45 93)(font "Arial" ))
+		(line (pt 0 88)(pt 16 88))
+	)
+	(port
+		(pt 184 40)
+		(output)
+		(text "dataout[BUS_WIDTH-1..0]" (rect -128 0 2 10)(font "Arial" ))
+		(text "dataout[BUS_WIDTH-1..0]" (rect 48 32 178 42)(font "Arial" ))
+		(line (pt 184 40)(pt 168 40)(line_width 3))
+	)
+	(port
+		(pt 0 64)
+		(output)
+		(text "full" (rect 0 0 15 10)(font "Arial" ))
+		(text "full" (rect 24 56 39 66)(font "Arial" ))
+		(line (pt 16 64)(pt 0 64))
+	)
+	(port
+		(pt 184 72)
+		(output)
+		(text "empty" (rect -128 0 -97 10)(font "Arial" ))
+		(text "empty" (rect 128 64 159 74)(font "Arial" ))
+		(line (pt 184 72)(pt 168 72))
+	)
+	(parameter
+		"BUS_WIDTH"
+		"16"
+		""
+		(type "PARAMETER_SIGNED_DEC")	)
+	(drawing
+		(rectangle (rect 16 8 168 120))
+	)
+	(annotation_block (parameter)(rect 256 40 448 64))
+)
