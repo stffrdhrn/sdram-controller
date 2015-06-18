@@ -852,12 +852,12 @@ agreement for further details.
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
 		"SDRADDR_WIDTH"
-		""
+		"13"
 		""
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
 		"HADDR_WIDTH"
-		""
+		"24"
 		""
 		(type "PARAMETER_SIGNED_DEC")	)
 	(parameter
