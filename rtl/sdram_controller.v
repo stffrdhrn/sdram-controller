@@ -124,7 +124,7 @@ output                     data_mask_high;
 reg  [HADDR_WIDTH-1:0]   haddr_r;
 reg  [15:0]              wr_data_r;
 reg  [15:0]              rd_data_r;
-reg                      busy_r;
+reg                      busy;
 reg                      data_mask_low_r;
 reg                      data_mask_high_r;
 reg [SDRADDR_WIDTH-1:0]  addr_r;
@@ -132,13 +132,11 @@ reg [BANK_WIDTH-1:0]     bank_addr_r;
 
 
 wire [15:0]              data_output;
-wire                     busy;
 wire                     data_mask_low, data_mask_high;
 
 assign data_mask_high = data_mask_high_r;
 assign data_mask_low  = data_mask_low_r;
 assign rd_data        = rd_data_r;
-assign busy           = busy_r;
 
 /* Internal Wiring */
 reg [3:0] state_cnt;
@@ -173,7 +171,7 @@ always @ (posedge clk)
     haddr_r <= {HADDR_WIDTH{1'b0}};
     wr_data_r <= 16'b0;
     rd_data_r <= 16'b0;
-    busy_r <= 1'b0;
+    busy <= 1'b0;
     end
   else 
     begin
@@ -188,25 +186,16 @@ always @ (posedge clk)
     
     if (wr_enable)
       wr_data_r <= wr_data;
-    else 
-      wr_data_r <= wr_data_r;
     
     if (state == READ_READ)
       rd_data_r <= data;
-    else
-      rd_data_r <= rd_data_r;
     
-    if (state[4]) 
-      busy_r <= 1'b1;
-    else
-      busy_r <= 1'b0;
+    busy <= state[4];
       
     if (rd_enable)
       haddr_r <= rd_addr;
     else if (wr_enable)
       haddr_r <= wr_addr;
-    else 
-      haddr_r <= haddr_r;
           
     end
 
@@ -229,6 +218,9 @@ begin
     else 
       {data_mask_low_r, data_mask_high_r} = 2'b11;
 
+   bank_addr_r = 2'b00;
+   addr_r = {SDRADDR_WIDTH{1'b0}};
+   
    if (state == READ_ACT | state == WRIT_ACT)
      begin
      bank_addr_r = haddr_r[HADDR_WIDTH-1:HADDR_WIDTH-(BANK_WIDTH)];
@@ -249,19 +241,13 @@ begin
      addr_r = {{SDRADDR_WIDTH-(COL_WIDTH+1){1'b0}}, 1'b1, haddr_r[COL_WIDTH-1:0]};
      end     
    else if (state == INIT_LOAD)
-     begin
-     bank_addr_r = 2'b00;
+     begin  
      // Program mode register during load cycle
      //                                       B  C  SB
      //                                       R  A  EUR
      //                                       S  S-3Q ST
      //                                       T  654L210
      addr_r = {{SDRADDR_WIDTH-10{1'b0}}, 10'b1000110000};
-     end
-   else 
-     begin 
-     bank_addr_r = 2'b00;
-     addr_r = {SDRADDR_WIDTH{1'b0}};
      end
 end
     
