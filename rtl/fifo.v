@@ -48,64 +48,73 @@ input                  rst_n;
 
 reg [BUS_WIDTH-1:0]    wr_data_r;
 reg [BUS_WIDTH-1:0]    rd_data;
-reg                    empty_n;
 
-reg                    full_syn1, full_syn2;     // Always need 2 synchro flops 
-reg                    empty_n_syn1, empty_n_syn2;
+/* 
+ * these reg sets span accross 2 clock domtains
+ *   CLK WR                    | CLK RD
+ *  [wr_r] ------------------> | -> [wr_syn1] -> [wr_syn2] -\
+ *  <- [wr_ack2] <- [wr_ack1]  | ---------------------------/
+ *    ^^^^^^^^^^               |  
+ *  Set wr_r when we get a wr  |  increment counter when we get
+ *  Clr wr when we get wr_ack2 |  wr_syn2, and syncronize data
+ * 
+ */
+reg                    wr_r, wr_syn1, wr_syn2, wr_ack1, wr_ack2;
+reg                    rd_r, rd_syn1, rd_syn2, rd_ack1, rd_ack2;
+reg                    wr_fifo_cnt;
+reg                    rd_fifo_cnt;
 
-reg                    rd_r;
-reg                    wr_r;
-reg                    full;
-wire                   full_nxt;
-wire                   empty_n_nxt;
-
-
-assign full_nxt = (wr | wr_r) | (full & empty_n_syn2);
-
-assign empty_n_nxt = ~rd & ~rd_r & full_syn2;
+assign full = wr_fifo_cnt == 1'b1;
+assign empty_n = rd_fifo_cnt == 1'b1;
 
 always @ (posedge rd_clk)
   if (~rst_n)
     begin
-    empty_n <= 1'b0;
-    {full_syn2, full_syn1} <= 2'b00;
+       rd_fifo_cnt <= 1'b0;
+       {rd_ack2, rd_ack1} <= 2'b00; 
+       {wr_syn2, wr_syn1} <= 2'b00; 
     end
   else
     begin
-      {full_syn2, full_syn1} <= {full_syn1, full};
       
-      // store that we got a read until we get and ack
-      // from the write side
-      rd_r <= rd | (full_syn2 & rd_r);
+      {rd_ack2, rd_ack1} <= {rd_ack1, rd_syn2}; 
+      {wr_syn2, wr_syn1} <= {wr_syn1, wr_r}; 
       
-      // if wr is much faster than read side we
-      // will miss the wr_syn
+      if (rd)
+        rd_r <= 1'b1;
+      else if (rd_ack2)
+        rd_r <= 1'b0;
       
-      if (full_syn2)
+      if (rd)
+        rd_fifo_cnt <= 1'b0;
+      if ({wr_syn2, wr_syn1} == 2'b01) // if we want to just do increment 1 time, we can check posedge
+        rd_fifo_cnt <= 1'b1;
+      
+      if (wr_syn2)
         rd_data <= wr_data_r;
-        
-      empty_n <= empty_n_nxt;
-      
     end
     
 always @ (posedge wr_clk)
  if (~rst_n)
    begin
-   wr_r <= 1'b0;
-   full <= 1'b0;
-   {empty_n_syn2, empty_n_syn1} <= 2'b00;
+      wr_fifo_cnt <= 1'b0;
+      {rd_syn2, rd_syn1} <= 2'b00;
+      {wr_ack2, wr_ack1} <= 2'b00;
    end
  else
    begin
-     {empty_n_syn2, empty_n_syn1} <= {empty_n_syn1, empty_n};
-     
-     // store that we got a wr until we get the ack from
-     // the read side
-     wr_r <= wr | (~empty_n_syn2 & wr_r);
-     
-     // If wr clock is really slow the rd will not be observerd
-     // We also store rd 
-     full <= full_nxt;
+     {wr_ack2, wr_ack1} <= {wr_ack1, wr_syn2};   
+     {rd_syn2, rd_syn1} <= {rd_syn1, rd_r};
+   
+     if (wr)
+       wr_r <= 1'b1;
+     if (wr_ack2)
+       wr_r <= 1'b0;
+       
+     if (wr)
+       wr_fifo_cnt <= 1'b1;
+     if ({rd_syn2, rd_syn1} == 2'b01)
+       wr_fifo_cnt <= 1'b0;
        
      // register write data on write
      if (wr)
