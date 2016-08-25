@@ -1,0 +1,30 @@
+CAPI=1
+[main]
+description = "Stafford's toy dram controller for de0 nano"
+simulators = icarus
+
+[verilog]
+src_files =
+ rtl/dnano_interface.v
+ rtl/double_click.v
+ rtl/fifo.v
+ rtl/sdram_controller.v
+ rtl/toplevel.v
+ rtl/pll.v
+
+tb_private_src_files =
+ bench/double_click_tb.v
+ bench/fifo_tb.v
+ bench/sdram_controller_tb.v
+
+[icarus]
+depend = vlog_tb_utils-1.0
+
+[simulator]
+depend = vlog_tb_utils-1.0
+toplevel = sdram_controller_tb
+
+#[provider]
+#name = github
+#user = stffrdhrn
+#repo = dram_controller

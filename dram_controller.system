@@ -1,0 +1,14 @@
+SAPI=1
+[main]
+name = dram_controller
+description = "Stafford toy dram controller for de0 Nano"
+
+backend = quartus
+
+[quartus]
+family = "Cyclone IV E"
+device = EP4CE22F17C6
+top_module = toplevel
+sdc_files = data/de0_nano.sdc
+tcl_files = data/pinmap.tcl
+            data/options.tcl
