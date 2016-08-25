@@ -19,26 +19,29 @@ Basic features
 
    /-----------------------------\
    |      sdram_controller       |
-==> haddr                    addr ==>
-==> data_input          bank_addr ==>
-<== data_output              data <=>
+==> wr_addr                  addr ==>
+==> wr_data             bank_addr ==>
+--> wr_enable                data <=>
    |                 clock_enable -->
-<-- busy                     cs_n -->
+==> rd_addr                  cs_n -->   
 --> rd_enable               ras_n -->
---> wr_enable               cas_n -->
-   |                         we_n -->
---> rst_n           data_mask_low -->
---> clk            data_mask_high -->
+<== rd_data                 cas_n -->
+<-- rd_ready                 we_n -->
+<-- busy            data_mask_low -->      
+   |               data_mask_high -->
+--> rst_n                        |
+--> clk                          |
    \-----------------------------/
 
 ```
 
 From the above diagram most signals should be pretty much self explainatory. Here are some important points for now.  It will be expanded on later. 
- - `haddr` is equivelant to the concatenation of `{bank, row, column}`
+ - `wr_addr` and `rd_addr` are equivelant to the concatenation of `{bank, row, column}`
  - `rd_enable` should be set to high once an address is presented on the `addr` bus and we wish to read data. 
  - `wr_enable` should be set to high once `addr` and `data` is presented on the bus
- - `busy` will go high when the read or write command is acknowledged. `busy` will go low when the write or read operation is complete.  In the case of read data should be on the bus for the next posedge.
- - **NOTE** For single reads and writes `wr_enable` and `rd_enable` should be set low once `busy` is observed.  This will protect from the controller thinking another request is needed. 
+ - `busy` will go high when the read or write command is acknowledged. `busy` will go low when the write or read operation is complete.  
+ - `rd_ready` will go high when data `rd_data` is available on the `data` bus.
+ - **NOTE** For single reads and writes `wr_enable` and `rd_enable` should be set low once `busy` is observed.  This will protect from the controller thinking another request is needed if left higher any longer. 
 
 ## Timings
 
@@ -111,4 +114,4 @@ BSD
 ## Further Reading
 I didn't look at these when designing my controller.  But it might be good to take a look at for ideas. 
  - http://hamsterworks.co.nz/mediawiki/index.php/Simple_SDRAM_Controller - featured on hackaday
- - http://ladybug.xs4all.nl/arlet/fpga/source/sdram.v - Arlet's implementation fro a comment on the hackaday article
+ - http://ladybug.xs4all.nl/arlet/fpga/source/sdram.v - Arlet's implementation from a comment on the hackaday article
