@@ -6,90 +6,120 @@
  * input (write) clock.
  *
  * Also, the fifo is just 1 word deep. 
+ *
+ * Changes
+ *  - 2015-07-03   issue when writing from low speed clock, empty_n goes
+ *                 high and stays high.  The reader side will see and read, but
+ *                 after complete empty_n is still high.  It will continue
+ *                 to read until empty_n is lowered based on the write side
+ *                 clock.
+ *                 The empty_n should go low once the reader reads.
+ *
  */
 module fifo (
-  datain, dataout,
-  clkin, clkout,
-  wr, rd,
-  full, empty_n,
+  // Write side
+  wr_clk,
+  wr_data, 
+  wr,
+  full,   // means don't write any more
+  
+  // Read side
+  rd_data,
+  rd_clk,
+  rd,
+  empty_n, // also means we can read
+  
   rst_n
 );
 
 parameter BUS_WIDTH = 16;
 
-input [BUS_WIDTH-1:0]  datain;
-input                  clkin;
-input                  clkout;
+input [BUS_WIDTH-1:0]  wr_data;
+input                  wr_clk;
 input                  wr;
-input                  rd;
-input                  rst_n;
-
-output [BUS_WIDTH-1:0] dataout; 
 output                 full;      // Low-Means in side can write
+
+output [BUS_WIDTH-1:0] rd_data; 
+input                  rd_clk;
+input                  rd;
 output                 empty_n;   // High-Means out side can read
 
+input                  rst_n;
 
-reg [BUS_WIDTH-1:0]    datain_r;
-reg [BUS_WIDTH-1:0]    dataout;
-reg                    empty_n;
+reg [BUS_WIDTH-1:0]    wr_data_r;
+reg [BUS_WIDTH-1:0]    rd_data;
 
-reg                    rd_syn1, rd_syn2;     // Always need 2 synchro flops 
-reg                    full_syn1, full_syn2;
+/* 
+ * these reg sets span accross 2 clock domtains
+ *   CLK WR                    | CLK RD
+ *  [wr_r] ------------------> | -> [wr_syn1] -> [wr_syn2] -\
+ *  <- [wr_ack2] <- [wr_ack1]  | ---------------------------/
+ *    ^^^^^^^^^^               |  
+ *  Set wr_r when we get a wr  |  increment counter when we get
+ *  Clr wr when we get wr_ack2 |  wr_syn2, and syncronize data
+ * 
+ */
+reg                    wr_r, wr_syn1, wr_syn2, wr_ack1, wr_ack2;
+reg                    rd_r, rd_syn1, rd_syn2, rd_ack1, rd_ack2;
+reg                    wr_fifo_cnt;
+reg                    rd_fifo_cnt;
 
-reg                    full_r;
-wire                   full_nxt;
+assign full = wr_fifo_cnt == 1'b1;
+assign empty_n = rd_fifo_cnt == 1'b1;
 
-assign full_nxt = wr | full_r;
-
-// When data is read the read signal will be
-// high for a long time. We dont want to get writes
-// during this time so consider the queue still 
-// full. 
-assign full = rd_syn2 | full_r;  // <<<<<< READ is Clock Domain Cross 
-
-always @ (posedge clkout)
+always @ (posedge rd_clk)
   if (~rst_n)
     begin
-    dataout <= {BUS_WIDTH{1'b0}};
-    empty_n <= 1'b0;
-    {full_syn2, full_syn1} <= 2'b00;
+       rd_fifo_cnt <= 1'b0;
+       {rd_ack2, rd_ack1} <= 2'b00; 
+       {wr_syn2, wr_syn1} <= 2'b00; 
     end
   else
     begin
-      {full_syn2, full_syn1} <= {full_syn1, full_r};
-    
-    if (full_syn2)
-      begin
-      empty_n <= 1'b1;
-      dataout <= datain_r;
-      end
-    else 
-      begin
-      empty_n <= 1'b0;
-      dataout <= dataout;
-      end
       
+      {rd_ack2, rd_ack1} <= {rd_ack1, rd_syn2}; 
+      {wr_syn2, wr_syn1} <= {wr_syn1, wr_r}; 
+      
+      if (rd)
+        rd_r <= 1'b1;
+      else if (rd_ack2)
+        rd_r <= 1'b0;
+      
+      if (rd)
+        rd_fifo_cnt <= 1'b0;
+      if ({wr_syn2, wr_syn1} == 2'b01) // if we want to just do increment 1 time, we can check posedge
+        rd_fifo_cnt <= 1'b1;
+      
+      if (wr_syn2)
+        rd_data <= wr_data_r;
     end
     
-always @ (posedge clkin)
+always @ (posedge wr_clk)
  if (~rst_n)
    begin
-   full_r <= 1'b0;
-   {rd_syn2, rd_syn1} <= 2'b00;
+      wr_fifo_cnt <= 1'b0;
+      {rd_syn2, rd_syn1} <= 2'b00;
+      {wr_ack2, wr_ack1} <= 2'b00;
    end
  else
    begin
-     {rd_syn2, rd_syn1} <= {rd_syn1, rd};
-     
-     if (rd_syn2)
-       full_r <= 1'b0;
-     else
-       full_r <= full_nxt;
+     {wr_ack2, wr_ack1} <= {wr_ack1, wr_syn2};   
+     {rd_syn2, rd_syn1} <= {rd_syn1, rd_r};
+   
+     if (wr)
+       wr_r <= 1'b1;
+     if (wr_ack2)
+       wr_r <= 1'b0;
        
      if (wr)
-       datain_r <= datain;
-     else 
-       datain_r <= datain_r;
+       wr_fifo_cnt <= 1'b1;
+     if ({rd_syn2, rd_syn1} == 2'b01)
+       wr_fifo_cnt <= 1'b0;
+       
+     // register write data on write
+     if (wr)
+       wr_data_r <= wr_data;
+
    end
 
 

@@ -99,9 +99,11 @@ always @ (posedge clk)
    end
    
 double_click #(.WAIT_WIDTH(DOUBlE_CLICK_WAIT)) double_clicki (
-  .button(~button_n), .single(wr_enable), .double(rd_enable),  .clk(clk), .rst_n(dbl_clck_rst_n)
+  .button  (~button_n),
+  .single  (wr_enable),
+  .double  (rd_enable),  
+  .clk     (clk),
+  .rst_n   (dbl_clck_rst_n)
 );
-
-
 
 endmodule

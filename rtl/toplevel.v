@@ -76,10 +76,10 @@ wire ctrl_busy;       /* rd ] <-> [ busy : pop fifo when ctrl not busy */
 wire ctrl_wr_enable;  /* .empty_n-wr_enable : signal ctrl data is ready */
 
 fifo #(.BUS_WIDTH(40)) wr_fifoi (
-    .clkin         (clk1m),
-    .clkout        (clk100m),
-    .datain        (wr_fifo),
-    .dataout       (wro_fifo),
+    .wr_clk        (clk1m),
+    .rd_clk        (clk100m),
+    .wr_data       (wr_fifo),
+    .rd_data       (wro_fifo),
     .rd            (ctrl_busy),
     .wr            (wr_enable),
     .full          (wr_full),
@@ -97,10 +97,10 @@ wire [23:0] rdao_fifo;
 wire ctrl_rd_enable;     /* empty_n - rd_enable: signal ctrl addr ready */
 
 fifo #(.BUS_WIDTH(24)) rdaddr_fifoi (
-    .clkin         (clk1m),
-    .clkout        (clk100m),
-    .datain        (wr_fifo[39:16]),
-    .dataout       (rdao_fifo),
+    .wr_clk        (clk1m),
+    .rd_clk        (clk100m),
+    .wr_data       (wr_fifo[39:16]),
+    .rd_data       (rdao_fifo),
     .rd            (ctrl_busy),
     .wr            (rd_enable),
     .full          (rdaddr_full),
@@ -119,10 +119,10 @@ wire        rd_ack;     /* rd_ack - rd     - pop fifo after data read */
 
 /* Incoming 16-bit data transfers from in:100m out:1m */
 fifo #(.BUS_WIDTH(16)) rddata_fifoi (
-    .clkin         (clk100m),
-    .clkout        (clk1m),
-    .datain        (rddo_fifo),
-    .dataout       (rddata_fifo),
+    .wr_clk        (clk100m),
+    .rd_clk        (clk1m),
+    .wr_data       (rddo_fifo),
+    .rd_data       (rddata_fifo),
     .rd            (rd_ack),
     .wr            (ctrl_rd_ready),
     .full          (),

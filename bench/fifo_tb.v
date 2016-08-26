@@ -50,19 +50,27 @@ begin
 end
   
 fifo #(.BUS_WIDTH(4)) fifo_f2si (
-  .datain(datain), .dataout(dataout_slow),
-  .clkin(clka), .clkout(clkb),
-  .wr(wr), .rd(rd),
-  .full(full_fast), .empty_n(empty_slow),
-  .rst_n(rst_n)
+  .wr_data (datain), 
+  .rd_data (dataout_slow),
+  .wr_clk  (clka), 
+  .rd_clk  (clkb),
+  .wr      (wr), 
+  .rd      (rd),
+  .full    (full_fast), 
+  .empty_n (empty_slow),
+  .rst_n   (rst_n)
 );
 
 fifo #(.BUS_WIDTH(4)) fifo_s2fi (
-  .datain(datain), .dataout(dataout_fast),
-  .clkin(clkb), .clkout(clka),
-  .wr(wr), .rd(rd),
-  .full(full_slow), .empty_n(empty_fast),
-  .rst_n(rst_n)
+  .wr_data (datain), 
+  .rd_data (dataout_fast),
+  .wr_clk  (clkb),
+  .rd_clk  (clka),
+  .wr      (wr),
+  .rd      (rd),
+  .full    (full_slow),
+  .empty_n (empty_fast),
+  .rst_n   (rst_n)
 );
   
 endmodule
