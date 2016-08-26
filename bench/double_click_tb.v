@@ -8,6 +8,8 @@
  */
 module double_click_tb();
 
+ vlog_tb_utils vlog_tb_utils0();
+
  reg button_r;
  reg rst_n, clk;
  wire single, double;
@@ -39,7 +41,8 @@ begin
   #5 button_r = 1'b1;
   #3 button_r = 1'b0;
   
-  
+  #100 $finish;
+    
 end
   
 double_click #(.WAIT_WIDTH(4)) double_clicki (

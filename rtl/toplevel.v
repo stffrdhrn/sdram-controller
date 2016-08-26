@@ -1,17 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 //
-// ORPSoC top for de0_nano board
-//
-// Instantiates modules, depending on ORPSoC defines file
-//
-// Copyright (C) 2013 Stefan Kristiansson
-//  <stefan.kristiansson@saunalahti.fi
-//
-// Based on de1 board by
-// Franck Jullien, franck.jullien@gmail.com
-// Which probably was based on the or1200-generic board by
-// Olof Kindgren, which in turn was based on orpsocv2 boards by
-// Julius Baxter.
+// toplevel for dram controller de0 nano board
 //
 //////////////////////////////////////////////////////////////////////
 //
@@ -66,12 +55,12 @@ assign sdram_clk_pad_o = clk100m;
 // PLLs
 pll_100m pll_100mi (
     .inclk0      (sys_clk_pad_i),
-    .c0          (clk100m),
+    .c0          (clk100m)
 );
 
 pll_1m pll_1mi (
     .inclk0      (sys_clk_pad_i),
-    .c0          (clk1m),
+    .c0          (clk1m)
 );
 
 // Cross Clock FIFOs
@@ -170,7 +159,7 @@ sdram_controller sdram_controlleri (
     .cas_n         (sdram_cas_pad_o),
     .we_n          (sdram_we_pad_o),
     .data_mask_low (sdram_dqm_pad_o[0]),
-    .data_mask_high(sdram_dqm_pad_o[1]),
+    .data_mask_high(sdram_dqm_pad_o[1])
 );
 
 wire        busy;
@@ -184,7 +173,7 @@ dnano_interface #(.HADDR_WIDTH(24)) dnano_interfacei (
     .leds         (gpio0_io),
 
   /* Controller Interface */
-    .haddr        (wr_fifo[36:16]),// RW-FIFO- data1
+    .haddr        (wr_fifo[39:16]),// RW-FIFO- data1
     .busy         (busy),          // RW-FIFO- full
   
     .wr_enable    (wr_enable),     // WR-FIFO- write

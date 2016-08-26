@@ -6,6 +6,8 @@
  */
 module fifo_tb();
 
+ vlog_tb_utils vlog_tb_utils0();
+ 
  reg rst_n, clka, clkb, rd, wr;
  reg [3:0] datain;
  
@@ -42,14 +44,16 @@ begin
   
   #80 rd = 1'b1;
   #26 rd = 1'b0;
-  
+ 
+  #100 $finish;
+ 
 end
   
 fifo #(.BUS_WIDTH(4)) fifo_f2si (
   .datain(datain), .dataout(dataout_slow),
   .clkin(clka), .clkout(clkb),
   .wr(wr), .rd(rd),
-  .full(full_fast), .empty(empty_slow),
+  .full(full_fast), .empty_n(empty_slow),
   .rst_n(rst_n)
 );
 
@@ -57,7 +61,7 @@ fifo #(.BUS_WIDTH(4)) fifo_s2fi (
   .datain(datain), .dataout(dataout_fast),
   .clkin(clkb), .clkout(clka),
   .wr(wr), .rd(rd),
-  .full(full_slow), .empty(empty_fast),
+  .full(full_slow), .empty_n(empty_fast),
   .rst_n(rst_n)
 );
   
