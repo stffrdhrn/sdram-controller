@@ -43,6 +43,26 @@ From the above diagram most signals should be pretty much self explainatory. Her
  - `rd_ready` will go high when data `rd_data` is available on the `data` bus.
  - **NOTE** For single reads and writes `wr_enable` and `rd_enable` should be set low once `busy` is observed.  This will protect from the controller thinking another request is needed if left higher any longer. 
 
+## Build
+
+The recommended way to build is to use `fusesoc`.  The build steps are then:
+
+```
+# Build the project with quartus
+fusesoc build dram_controller
+# Program the project to de0 nano
+fusesoc pgm dram_controller
+
+# Build with icarus verilog and test
+fusesoc sim dram_controller --vcd
+gtkwave $fusebuild/dram_controller/sim-icarus/testlog.vcd
+
+# Run other test cases 
+fusesoc sim --testbench fifo_tb dram_controller --vcd
+fusesoc sim --testbench double_click_tb dram_controller --vcd
+```
+
+
 ## Timings
 
 # Initialization

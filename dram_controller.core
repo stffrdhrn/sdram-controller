@@ -10,7 +10,8 @@ src_files =
  rtl/fifo.v
  rtl/sdram_controller.v
  rtl/toplevel.v
- rtl/pll.v
+ quartus/pll_100m.v
+ quartus/pll_1m.v
 
 tb_private_src_files =
  bench/double_click_tb.v
