@@ -55,7 +55,7 @@ module toplevel (
     output        sdram_clk_pad_o,
 
     inout [7:0]   gpio0_io,  /* LEDs */
-    input [3:0]   gpio1_i,   /* DIPs */
+    input [3:0]   gpio1_i    /* DIPs */
 );
 
 wire clk100m;
@@ -75,60 +75,88 @@ pll_1m pll_1mi (
 );
 
 // Cross Clock FIFOs
-/* Address and Data transfers from in:1m out:100m */
-fifo wr_fifoi #(.BUS_WIDTH(40)) (
+/* Address 24-bit and 16-bit Data transfers from in:1m out:100m */
+
+/* 1 mhz side wires */
+wire [39:0] wr_fifo;
+wire wr_enable;      /* wr_enable ] <-> [ wr : wr_enable to push fifo */
+wire wr_full;        /* wr_full   ] <-> [ full : signal that we are full */
+/* 100mhz side wires */
+wire [39:0] wro_fifo;
+wire ctrl_busy;       /* rd ] <-> [ busy : pop fifo when ctrl not busy */
+wire ctrl_wr_enable;  /* .empty_n-wr_enable : signal ctrl data is ready */
+
+fifo #(.BUS_WIDTH(40)) wr_fifoi (
     .clkin         (clk1m),
     .clkout        (clk100m),
-    .datain        (),
-    .dataout       (),
-    .rd            (),
-    .wr            (),
-    .full          (),
-    .empty_n       (),
-    .rst_n         ()
+    .datain        (wr_fifo),
+    .dataout       (wro_fifo),
+    .rd            (ctrl_busy),
+    .wr            (wr_enable),
+    .full          (wr_full),
+    .empty_n       (ctrl_wr_enable),
+    .rst_n         (rst_n_pad_i)
 );
 
-/* Address transfers from in:1m out:100m */
-fifo rdaddr_fifoi #(.BUS_WIDTH(24)) (
+/* Address 24-bit transfers from in:1m out:100m */
+/* 1 mhz side wires */
+wire        rd_enable;  /*  rd_enable -wr : rd_enable to push rd addr to fifo */
+wire        rdaddr_full;/* rdaddr_full-full : signal we cannot read more */
+
+/* 100mhz side wires */
+wire [23:0] rdao_fifo;
+wire ctrl_rd_enable;     /* empty_n - rd_enable: signal ctrl addr ready */
+
+fifo #(.BUS_WIDTH(24)) rdaddr_fifoi (
     .clkin         (clk1m),
     .clkout        (clk100m),
-    .datain        (),
-    .dataout       (),
-    .rd            (),
-    .wr            (),
-    .full          (),
-    .empty_n       (),
-    .rst_n         ()
+    .datain        (wr_fifo[39:16]),
+    .dataout       (rdao_fifo),
+    .rd            (ctrl_busy),
+    .wr            (rd_enable),
+    .full          (rdaddr_full),
+    .empty_n       (ctrl_rd_enable),
+    .rst_n         (rst_n_pad_i)
 );
 
-/* Incoming data transfers from in:100m out:1m */
-fifo rddata_fifoi #(.BUS_WIDTH(16)) (
+/* 100mhz side wires */
+wire [15:0] rddo_fifo;
+wire ctrl_rd_ready;     /* wr - rd_ready - push data from dram to fifo */
+
+/* 1mhz side wires */
+wire [15:0] rddata_fifo;
+wire        rd_ready;   /* rd_ready-empty_n- signal interface data ready */
+wire        rd_ack;     /* rd_ack - rd     - pop fifo after data read */
+
+/* Incoming 16-bit data transfers from in:100m out:1m */
+fifo #(.BUS_WIDTH(16)) rddata_fifoi (
     .clkin         (clk100m),
     .clkout        (clk1m),
-    .datain        (),
-    .dataout       (),
-    .rd            (),
-    .wr            (),
+    .datain        (rddo_fifo),
+    .dataout       (rddata_fifo),
+    .rd            (rd_ack),
+    .wr            (ctrl_rd_ready),
     .full          (),
-    .empty_n       (),
-    .rst_n         ()
+    .empty_n       (rd_ready),
+    .rst_n         (rst_n_pad_i)
 );
 
 
 /* SDRAM */
 
+
 sdram_controller sdram_controlleri (
     /* HOST INTERFACE */
-    .wr_addr       (),
-    .wr_data       (),
-    .wr_enable     (), 
+    .wr_addr       (wro_fifo[39:16]),
+    .wr_data       (wro_fifo[15:0]),
+    .wr_enable     (ctrl_wr_enable), 
 
-    .rd_addr       (), 
-    .rd_data       (),
-    .rd_ready      (),
-    .rd_enable     (),
+    .rd_addr       (rdao_fifo), 
+    .rd_data       (rddo_fifo),
+    .rd_ready      (ctrl_rd_ready),
+    .rd_enable     (ctrl_rd_enable),
     
-    .busy          (),
+    .busy          (ctrl_busy),
     .rst_n         (rst_n_pad_i),
     .clk           (clk100m),
 
@@ -145,31 +173,33 @@ sdram_controller sdram_controlleri (
     .data_mask_high(sdram_dqm_pad_o[1]),
 );
 
-dnano_interface dnano_interfacei (
+wire        busy;
+
+assign busy = wr_full | rdaddr_full;
+
+dnano_interface #(.HADDR_WIDTH(24)) dnano_interfacei (
   /* Human Interface */
-    .button_n     (), 
-    .dip          (),
-    .leds         (),
+    .button_n     (btn_n_pad_i), 
+    .dip          (gpio1_i),
+    .leds         (gpio0_io),
 
   /* Controller Interface */
-    .haddr        (),     // RW-FIFO- data1
-    .busy         (),     // RW-FIFO- full
+    .haddr        (wr_fifo[36:16]),// RW-FIFO- data1
+    .busy         (busy),          // RW-FIFO- full
   
-    .wr_enable    (),     // WR-FIFO- write
-    .wr_data      (),     // WR-FIFO- data2
+    .wr_enable    (wr_enable),     // WR-FIFO- write
+    .wr_data      (wr_fifo[15:00]),// WR-FIFO- data2
   
-    .rd_enable    (),     // RO-FIFO- write
+    .rd_enable    (rd_enable),     // RO-FIFO- write
   
-    .rd_data      (),     // RI-FIFO- data
-    .rd_rdy       (),     // RI-FIFO-~empty
-    .rd_ack       (),     // RI-FIFO- read
+    .rd_data      (rddata_fifo),   // RI-FIFO- data
+    .rd_rdy       (rd_ready),      // RI-FIFO-~empty
+    .rd_ack       (rd_ack),        // RI-FIFO- read
 
   /* basics */
     .rst_n        (rst_n_pad_i), 
     .clk          (clk1m)
 
 );
-
-
 
 endmodule // toplevel
