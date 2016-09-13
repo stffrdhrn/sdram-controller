@@ -3,20 +3,34 @@ CAPI=1
 description = "Stafford's toy dram controller for de0 nano"
 simulators = icarus
 
-[verilog]
-src_files =
+[fileset rtl_files]
+files =
  rtl/dnano_interface.v
  rtl/double_click.v
  rtl/fifo.v
  rtl/sdram_controller.v
+file_type = verilogSource
+usage = sim synth
+
+# Files only used when building the system top level
+[fileset top_files]
+scope = private
+files =
  rtl/toplevel.v
  quartus/pll_100m.v
  quartus/pll_1m.v
+file_type = verilogSource
+usage = synth
 
-tb_private_src_files =
+# File only used when building and running tests
+[fileset tb_files]
+scope = private
+files =
  bench/double_click_tb.v
  bench/fifo_tb.v
  bench/sdram_controller_tb.v
+file_type = verilogSource
+usage = sim
 
 [icarus]
 depend = vlog_tb_utils-1.0

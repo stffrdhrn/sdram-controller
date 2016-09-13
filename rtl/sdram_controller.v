@@ -153,7 +153,7 @@ reg [4:0] next;
 
 assign {clock_enable, cs_n, ras_n, cas_n, we_n} = command[7:3];
 // state[4] will be set if mode is read/write
-assign bank_addr[1:0] = (state[4]) ? bank_addr_r : command[2:1];
+assign bank_addr      = (state[4]) ? bank_addr_r : command[2:1];
 assign addr           = (state[4] | state == INIT_LOAD) ? addr_r : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
                         
 assign data = (state == WRIT_CAS) ? wr_data_r : 16'bz;
