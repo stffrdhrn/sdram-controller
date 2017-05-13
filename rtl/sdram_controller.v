@@ -136,6 +136,7 @@ reg                      data_mask_low_r;
 reg                      data_mask_high_r;
 reg [SDRADDR_WIDTH-1:0]  addr_r;
 reg [BANK_WIDTH-1:0]     bank_addr_r;
+reg                      rd_ready_r;
 
 wire [15:0]              data_output;
 wire                     data_mask_low, data_mask_high;
@@ -163,7 +164,7 @@ assign bank_addr      = (state[4]) ? bank_addr_r : command[2:1];
 assign addr           = (state[4] | state == INIT_LOAD) ? addr_r : { {SDRADDR_WIDTH-11{1'b0}}, command[0], 10'd0 };
 
 assign data = (state == WRIT_CAS) ? wr_data_r : 16'bz;
-assign rd_ready = (state == READ_READ) ? 1'b1 : 1'b0;
+assign rd_ready = rd_ready_r;
 
 // HOST INTERFACE
 // all registered on posedge
@@ -194,7 +195,12 @@ always @ (posedge clk)
       wr_data_r <= wr_data;
 
     if (state == READ_READ)
+      begin
       rd_data_r <= data;
+      rd_ready_r <= 1'b1;
+      end
+    else
+      rd_ready_r <= 1'b0;
 
     busy <= state[4];
 
