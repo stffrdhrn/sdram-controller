@@ -249,8 +249,17 @@ begin
      // HADDR_WIDTH   2 +   13 +   9   = 24
      // SDRADDR_WIDTH 13
 
-     // Set address to 000s + 1 (for auto precharge) + column address
-     addr_r = {{SDRADDR_WIDTH-(COL_WIDTH+1){1'b0}}, 1'b1, haddr_r[COL_WIDTH-1:0]};
+     // Set CAS address to:
+     //   0s,
+     //   1 (A10 is always for auto precharge),
+     //   0s,
+     //   column address
+     addr_r = {
+               {SDRADDR_WIDTH-(11){1'b0}},
+               1'b1,                       /* A10 */
+               {10-COL_WIDTH{1'b0}},
+               haddr_r[COL_WIDTH-1:0]
+              };
      end
    else if (state == INIT_LOAD)
      begin
